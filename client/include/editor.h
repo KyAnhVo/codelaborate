@@ -8,7 +8,7 @@ class Editor : public QPlainTextEdit {
     Q_OBJECT
 
 public:
-    Editor();
+    Editor(QWidget * parent = nullptr);
     ~Editor();
 
 public slots:
