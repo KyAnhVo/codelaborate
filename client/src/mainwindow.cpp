@@ -10,7 +10,7 @@ MainWindow::MainWindow(QWidget * parent) : QMainWindow(parent) {
     this->exitSessionButton     = new QPushButton("Exit current session");
     
     // editor conf
-    this->editor = new QPlainTextEdit();
+    this->editor = new Editor();
 
     // session id link
     this->sessionId = new QLineEdit();

@@ -6,6 +6,13 @@
 
 class Editor : public QPlainTextEdit {
     Q_OBJECT
+
+public:
+    Editor();
+    ~Editor();
+
+public slots:
+    void receiveUpdate(int, int, const QString&);
 };
 
 #endif

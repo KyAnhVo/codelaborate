@@ -7,6 +7,8 @@
 #include <QPlainTextEdit>
 #include <qtmetamacros.h>
 
+#include "editor.h"
+
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
@@ -29,7 +31,7 @@ private:
 
     QLineEdit * sessionId;
     
-    QPlainTextEdit * editor;
+    Editor * editor;
 };
 
 #endif
