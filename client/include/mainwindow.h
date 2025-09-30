@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QPushButton>
 #include <QLineEdit>
+#include <QPlainTextEdit>
 #include <qtmetamacros.h>
 
 class MainWindow : public QMainWindow {
@@ -15,18 +16,20 @@ public:
 
 public slots:
     // buttons clicked slots
-    void on_create_session_button_clicked();
-    void on_join_session_button_clicked();
-    void on_exit_session_button_clicked();
+    void createSession();
+    void joinSession();
+    void exitSession();
 
 private:
     bool has_session;
 
-    QPushButton * create_session_button,
-                * join_session_button,
-                * exit_session_button;
+    QPushButton * createSessionButton,
+                * joinSessionButton,
+                * exitSessionButton;
 
-    QLineEdit * session_id;
+    QLineEdit * sessionId;
+    
+    QPlainTextEdit * editor;
 };
 
 #endif
