@@ -14,4 +14,10 @@ MainWindow::MainWindow(QWidget * parent) : QMainWindow(parent) {
 
     // session id link
     this->sessionId = new QLineEdit();
+    
+    // conn here and there
+    connect(this->editor->document(), &QTextDocument::contentsChange,
+            this->networkManager, &Network::sendUpdateToServer);
+    connect(this->networkManager, &Network::receivedUpdate,
+            this->editor, &Editor::update);
 }

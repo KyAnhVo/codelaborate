@@ -12,7 +12,7 @@ public:
     ~Editor();
 
 public slots:
-    void receiveUpdate(int, int, const QString&);
+    void update(int, int, const QString&);
 };
 
 #endif

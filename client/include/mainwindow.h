@@ -8,6 +8,7 @@
 #include <qtmetamacros.h>
 
 #include "editor.h"
+#include "network.h"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -32,6 +33,8 @@ private:
     QLineEdit * sessionId;
     
     Editor * editor;
+
+    Network * networkManager;
 };
 
 #endif
