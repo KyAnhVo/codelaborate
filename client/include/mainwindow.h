@@ -30,7 +30,7 @@ private:
                 * joinSessionButton,
                 * exitSessionButton;
 
-    QLineEdit * sessionId;
+    QLineEdit * sessionIdLineEdit;
     
     Editor * editor;
 

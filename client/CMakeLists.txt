@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.16)
-project(artscii_desktop)
+project(codelaborate)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # find packages (if needed just add here)
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets Core Network)
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 # Qt-specific setup
 
@@ -20,19 +20,19 @@ include_directories(
 
 #source dirs
 
-file(GLOB RECURSE SRC_FILES
+file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
     "${CMAKE_SOURCE_DIR}/src/*.cpp"
 )
-file(GLOB RECURSE HEADER_FILES
+file(GLOB_RECURSE HEADER_FILES CONFIGURE_DEPENDS
     "${CMAKE_SOURCE_DIR}/include/*.h"
 )
-add_executable(artscii_desktop ${SRC_FILES} ${HEADER_FILES})
+message(STATUS "SRC_FILES=${SRC_FILES}")
+message(STATUS "HDR_FILES=${HEADER_FILES}")
+add_executable(codelaborate ${SRC_FILES} ${HEADER_FILES})
 
 # Link libraries from outside installs (most of these are dynamically linked libraries)
 
-target_link_libraries(artscii_desktop PRIVATE
+target_link_libraries(codelaborate PRIVATE
     Qt6::Widgets
-    Qt6::Core
-    Qt6::Network
 )
 
