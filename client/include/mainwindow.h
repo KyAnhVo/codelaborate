@@ -17,11 +17,17 @@ public:
     MainWindow(QWidget * parent=nullptr);
     ~MainWindow();
 
+signals:
+    void sendReplacementInfo(int pos, int deleteLen, const QString& insertStr);
+
 public slots:
     // buttons clicked slots
     void createSession();
     void joinSession();
     void exitSession();
+
+    // editor update slots
+    void receiveUpdateLens(int, int, int);
 
 private:
     bool has_session;

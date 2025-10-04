@@ -13,7 +13,7 @@ public:
     ~Network();
 
 public slots:
-    void sendUpdateToServer(int, int, int);
+    void sendUpdateToServer(int, int, const QString&);
 
 signals:
     void receivedUpdate(int, int, const QString&);

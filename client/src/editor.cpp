@@ -10,7 +10,7 @@ Editor::~Editor() {}
  * Both                 => do nothing
  * Neither              => replace
  */
-void Editor::update(int cursorPos, int charsReplaced, const QString& replaceStr) {
+void Editor::applyOnlineChanges(int cursorPos, int charsReplaced, const QString& replaceStr) {
     QTextCursor editCursor(this->document());
     editCursor.setPosition(cursorPos);
     editCursor.setPosition(cursorPos + charsReplaced, QTextCursor::KeepAnchor);

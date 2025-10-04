@@ -23,11 +23,21 @@ MainWindow::MainWindow(QWidget * parent) : QMainWindow(parent) {
     // network manager
     this->networkManager = new Network(1900, "loopback", 80);
     
-    // conn here and there
+    // Param for current slot/signal: int, int, int
+    // this one essentially converts from (pos, delLen, insertLen)
+    // to (pos, delLen, insertStr)
     connect(this->editor->document(), &QTextDocument::contentsChange,
+            this, &MainWindow::receiveUpdateLens);
+    // Param for current slot/signal: int, int, const QString&
+    // this one essentially sends the updated (pos, delLen, insertStr)
+    // to server
+    connect(this, &MainWindow::sendReplacementInfo,
             this->networkManager, &Network::sendUpdateToServer);
+    // Param for current slot/signal: int, int, const QString&
+    // this one receives updates from server in (pos, delLen, insertStr)
+    // then updates the editor with the corresponding update
     connect(this->networkManager, &Network::receivedUpdate,
-            this->editor, &Editor::update);
+            this->editor, &Editor::applyOnlineChanges);
 
     // Session Box
     QHBoxLayout * sessionBox = new QHBoxLayout;
@@ -47,6 +57,13 @@ MainWindow::MainWindow(QWidget * parent) : QMainWindow(parent) {
 
 MainWindow::~MainWindow() {}
 
+void MainWindow::receiveUpdateLens(int pos, int deleteLen, int insertLen) {
+    QTextCursor cursor(this->editor->document());
+    cursor.setPosition(pos);
+    cursor.setPosition(pos + insertLen - 1, QTextCursor::KeepAnchor);
+    const QString addedStr = cursor.selectedText();
+    emit sendReplacementInfo(pos, deleteLen, addedStr);
+}
 void MainWindow::createSession() {}
 void MainWindow::joinSession() {}
 void MainWindow::exitSession() {}
