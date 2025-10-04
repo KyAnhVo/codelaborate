@@ -6,7 +6,8 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
-#include <qboxlayout.h>
+#include <QBoxLayout>
+#include <qnamespace.h>
 
 MainWindow::MainWindow(QWidget * parent) : QMainWindow(parent) {
     // buttons setup
@@ -22,22 +23,30 @@ MainWindow::MainWindow(QWidget * parent) : QMainWindow(parent) {
 
     // network manager
     this->networkManager = new Network(1900, "loopback", 80);
+    this->networkManager->moveToThread(&this->networkThread);
     
+    // Thread startup and cleanup
+    connect(&this->networkThread, &QThread::finished,
+            this->networkManager, &Network::deleteLater);
+
     // Param for current slot/signal: int, int, int
     // this one essentially converts from (pos, delLen, insertLen)
     // to (pos, delLen, insertStr)
     connect(this->editor->document(), &QTextDocument::contentsChange,
-            this, &MainWindow::receiveUpdateLens);
+            this, &MainWindow::receiveUpdateLens,
+            Qt::QueuedConnection);
     // Param for current slot/signal: int, int, const QString&
     // this one essentially sends the updated (pos, delLen, insertStr)
     // to server
     connect(this, &MainWindow::sendReplacementInfo,
-            this->networkManager, &Network::sendUpdateToServer);
+            this->networkManager, &Network::sendUpdateToServer,
+            Qt::QueuedConnection);
     // Param for current slot/signal: int, int, const QString&
     // this one receives updates from server in (pos, delLen, insertStr)
     // then updates the editor with the corresponding update
     connect(this->networkManager, &Network::receivedUpdate,
-            this->editor, &Editor::applyOnlineChanges);
+            this->editor, &Editor::applyOnlineChanges,
+            Qt::QueuedConnection);
 
     // Session Box
     QHBoxLayout * sessionBox = new QHBoxLayout;

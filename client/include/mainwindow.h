@@ -5,6 +5,7 @@
 #include <QPushButton>
 #include <QLineEdit>
 #include <QPlainTextEdit>
+#include <QThread>
 #include <qtmetamacros.h>
 
 #include "editor.h"
@@ -31,6 +32,7 @@ public slots:
 
 private:
     bool has_session;
+    QThread networkThread;
 
     QPushButton * createSessionButton,
                 * joinSessionButton,
