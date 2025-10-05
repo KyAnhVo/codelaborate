@@ -1,57 +1,37 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
 	"net"
-	"sync"
+	"fmt"
+	"os"
 )
 
 func main() {
-	var wg sync.WaitGroup
-	wg.Add(2)
-	go serverTCP(&wg)
-	go serverHTTP(&wg)
-	wg.Wait()
-}
-
-func serverTCP(wg *sync.WaitGroup) {
-	defer wg.Done()
-	ln, err := net.Listen("tcp", ":8888")
-	if err != nil {
-		fmt.Println("Cannot listen on port 80")
+	arguments := os.Args
+	if len(arguments) != 2 {
+		fmt.Println("Usage: ./main.go <port_num>")
 		return
 	}
-	fmt.Println("Started listening")
+
+	PORT := ":" + arguments[1]
+	listener, err := net.Listen("tcp", PORT)
+	if err != nil {
+		fmt.Printf("Failure to open port at %s\n", PORT)
+		return
+	}
+	defer listener.Close()
+
 	for {
-		conn, err := ln.Accept()
+		conn, err := listener.Accept()
 		if err != nil {
-			fmt.Println("Cannot accept call")
-			conn.Close()
-			break
+			fmt.Println(err)
+			return
 		}
-		go sendTCP(conn)
+
+		go handleConnection(conn)
 	}
 }
 
-func sendTCP(conn net.Conn) {
-	fmt.Fprintln(conn, "{\"msg\": \"Hello World\"}")
-	conn.Close()
-}
+func handleConnection(c net.Conn) {
 
-func serverHTTP(wg *sync.WaitGroup) {
-	defer wg.Done()
-	http.HandleFunc("/", sendWebapp)
-	fmt.Println("HTTP server listen")
-	err:= http.ListenAndServe(":8080", nil)
-	if err != nil {
-		fmt.Println("HTTP: ListendAndServe: ", err)
-		return
-	}
-}
-
-func sendWebapp(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("HTTP: client at ", r.RemoteAddr)
-	filePath := "./../client/index.html"
-	http.ServeFile(w, r, filePath)
 }
