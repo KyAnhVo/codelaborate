@@ -4,9 +4,17 @@ import (
 	"net"
 	"fmt"
 	"os"
+	"sync"
 )
 
+var wg sync.WaitGroup
+
 func main() {
+	// unexpected error 
+	defer func() {
+		wg.Wait()
+	} ()
+
 	arguments := os.Args
 	if len(arguments) != 2 {
 		fmt.Println("Usage: ./main.go <port_num>")
@@ -27,11 +35,11 @@ func main() {
 			fmt.Println(err)
 			return
 		}
-
-		go handleConnection(conn)
+		
+		wg.Add(1)
+		go HandleConnection(&wg, conn)
 	}
-}
-
-func handleConnection(c net.Conn) {
 
 }
+
+
