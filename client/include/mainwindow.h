@@ -19,13 +19,14 @@ public:
     ~MainWindow();
 
 signals:
+    void connectToServer(Network::ConnType, std::string);
     void sendReplacementInfo(int pos, int deleteLen, const QString& insertStr);
 
 public slots:
     // buttons clicked slots
-    void createSession();
-    void joinSession();
-    void exitSession();
+    void createSessionClicked();
+    void joinSessionClicked();
+    void exitSessionClicked();
 
     // editor update slots
     void receiveUpdateLens(int, int, int);

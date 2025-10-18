@@ -31,6 +31,9 @@ Network::Network(std::string serverIpAddr, std::string serverPort) : io(), socke
 Network::~Network() {}
 
 void Network::connectToServer(Network::ConnType conn, std::string roomID) {
+    std::cout << "received connect info:" << std::endl
+        << (conn == Network::ConnType::JOIN ? "JOIN " : "CREATE ") << roomID << std::endl;
+
     uint32_t roomIDInt;
     roomIDInt = stouint<uint32_t>(roomID);
     roomIDInt = boost::endian::native_to_big(roomIDInt);

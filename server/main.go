@@ -37,6 +37,8 @@ func main() {
 		}
 		
 		wg.Add(1)
+		remoteAddr := conn.RemoteAddr().(*net.TCPAddr)
+		fmt.Printf("Connected with %s:%d\n", remoteAddr.IP, remoteAddr.Port)
 		go HandleConnection(&wg, conn)
 	}
 

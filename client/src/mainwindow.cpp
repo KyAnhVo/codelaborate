@@ -9,6 +9,11 @@
 #include <QBoxLayout>
 #include <qnamespace.h>
 
+#define SERVER_ADDR_TEST "127.0.0.1"
+#define SERVER_ADDR_PROD "127.0.0.1"    // subject to change
+#define SERVER_PORT_TEST 80
+#define SERVER_PORT_PROD 80             // subject to change
+
 MainWindow::MainWindow(QWidget * parent) : QMainWindow(parent) {
     // buttons setup
     this->createSessionButton   = new QPushButton("Create Session");
@@ -29,21 +34,34 @@ MainWindow::MainWindow(QWidget * parent) : QMainWindow(parent) {
     connect(&this->networkThread, &QThread::finished,
             this->networkManager, &Network::deleteLater);
 
-    // this one essentially converts from (pos, delLen, insertLen)
-    // to (pos, delLen, insertStr)
+    // Converts from (pos, delLen, insertLen) to (pos, delLen, insertStr)
     connect(this->editor->document(), &QTextDocument::contentsChange,
             this, &MainWindow::receiveUpdateLens,
             Qt::QueuedConnection);
-    // this one essentially sends the updated (pos, delLen, insertStr)
-    // to server
+
+    // sends the updated (pos, delLen, insertStr) to server
     connect(this, &MainWindow::sendReplacementInfo,
             this->networkManager, &Network::sendUpdateToServer,
             Qt::QueuedConnection);
-    // this one receives updates from server in (pos, delLen, insertStr)
+
+    // receives updates from server in (pos, delLen, insertStr)
     // then updates the editor with the corresponding update
     connect(this->networkManager, &Network::receivedUpdate,
             this->editor, &Editor::applyOnlineChanges,
             Qt::QueuedConnection);
+
+    // general sends create/join to networkManager
+    connect(this, &MainWindow::connectToServer,
+            this->networkManager, &Network::connectToServer);
+
+    // Sends create session to server
+    connect(this->createSessionButton, &QPushButton::clicked,
+            this, &MainWindow::createSessionClicked);
+
+    // Sends join session to server
+    connect(this->joinSessionButton, &QPushButton::clicked,
+            this, &MainWindow::joinSessionClicked);
+    
 
     // Session Box
     QHBoxLayout * sessionBox = new QHBoxLayout;
@@ -70,6 +88,16 @@ void MainWindow::receiveUpdateLens(int pos, int deleteLen, int insertLen) {
     const QString addedStr = cursor.selectedText();
     emit sendReplacementInfo(pos, deleteLen, addedStr);
 }
-void MainWindow::createSession() {}
-void MainWindow::joinSession() {}
-void MainWindow::exitSession() {}
+
+void MainWindow::createSessionClicked() {
+    QString id = this->sessionIdLineEdit->text();
+    std::string idStd = id.toStdString();
+    emit this->connectToServer(Network::ConnType::CREATE, idStd);
+}
+
+void MainWindow::joinSessionClicked() {
+    QString id = this->sessionIdLineEdit->text();
+    std::string idStd = id.toStdString();
+    emit this->connectToServer(Network::ConnType::JOIN, idStd);
+}
+void MainWindow::exitSessionClicked() {}
