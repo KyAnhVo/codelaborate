@@ -52,6 +52,6 @@ func HandleConnection(wg *sync.WaitGroup, c net.Conn) {
 	fmt.Printf("%s: %d", uint8ByteBuffer, roomID)
 
 	// process room_id
-
+	
 
 }
