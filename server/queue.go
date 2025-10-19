@@ -19,9 +19,6 @@ type Queue[T any] struct {
 
 	// actual implemented slice
 	slice 		[]T
-
-	// mutex to access Queue
-	lock 		sync.Mutex
 }
 
 func NewQueue[T any](capacity uint64) *Queue[T] {
@@ -40,9 +37,6 @@ func NewQueue[T any](capacity uint64) *Queue[T] {
 }
 
 func (q *Queue[T]) Enqueue(v T) {
-	q.lock.Lock()
-	defer q.lock.Unlock()
-
 	if q.first == q.last && !(q.isEmpty) { // queue is full
 		newSlice 		:= make([]T, q.capacity * 2)
 		var next uint64
@@ -62,9 +56,6 @@ func (q *Queue[T]) Enqueue(v T) {
 }
 
 func (q *Queue[T]) Dequeue() (T, bool) {
-	q.lock.Lock()
-	defer q.lock.Unlock()
-
 	if q.isEmpty {
 		var zero T
 		return zero, false
