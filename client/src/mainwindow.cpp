@@ -29,6 +29,7 @@ MainWindow::MainWindow(QWidget * parent) : QMainWindow(parent) {
     // network manager
     this->networkManager = new Network("127.0.0.1", "80");
     this->networkManager->moveToThread(&this->networkThread);
+    this->networkThread.start();
     
     // Thread startup and cleanup
     connect(&this->networkThread, &QThread::finished,
