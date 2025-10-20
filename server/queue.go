@@ -1,9 +1,5 @@
 package main
 
-import (
-	"sync"
-)
-
 type Queue[T any] struct {
 	// true if empty, false otherwise
 	isEmpty 	bool
@@ -21,6 +17,9 @@ type Queue[T any] struct {
 	slice 		[]T
 }
 
+// NewQueue creates a queue of type T with the
+// given capacity. If given capacity is equal to 0,
+// we will use default 32 capacity.
 func NewQueue[T any](capacity uint64) *Queue[T] {
 	if capacity == 0 {
 		capacity = 32
