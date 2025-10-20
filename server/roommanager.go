@@ -64,14 +64,14 @@ type RoomManager struct {
 	lock			sync.RWMutex
 }
 
-// CreateRoom creates a RoomManager for a new room.
-func CreateRoom() *RoomManager {
+// NewRoomManager creates a RoomManager for a new room.
+func NewRoomManager(roomID uint32) *RoomManager {
 	room 			:= new(RoomManager)
 	room.lock.Lock()
+	room.roomID 	= roomID
 	room.msgQueue 	= NewQueue[*UpdateMsg](0)
 	room.document 	= ""
 	room.client 	= make([]*Client, 255)
-	nextRoomID++
 	room.lock.Unlock()
 	return room
 }
