@@ -4,9 +4,14 @@ import (
 	"net"
 	"sync"
 	"errors"
+	"time"
 )
 
+// Only 128 rooms are available at a time max.
 const maxRoomCount uint32 = 128
+
+// Duration room is guranteed to exist before being available to be kicked out
+const maxGuranteedRoomDuration = 30 * time.Minute
 
 ///////////////////////////////////////////////////////////////////////
 
@@ -51,6 +56,24 @@ func JoinRoom(roomID uint32) (*RoomManager, error) {
 	return roomManagers[roomID], nil
 }
 
+func AddRoom() (*RoomManager, error) {
+	roomsLock.Lock()
+	defer roomsLock.Unlock()
+
+	if !noRoom && nextRoomID == firstRoomID {
+		dur := time.Now().Sub(*roomManagers[firstRoomID].StartTime())
+		if int64(dur) < maxGuranteedRoomDuration.Nanoseconds() {
+			return nil, errors.New("all room spots filled")
+		}
+		roomManagers[firstRoomID].DeleteRoom()
+		firstRoomID = (firstRoomID + 1) % maxRoomCount
+	}
+
+	newRoom := NewRoomManager(nextRoomID)
+	roomManagers[nextRoomID] = newRoom
+	return newRoom, nil
+}
+
 // TODO: implement CreateRoom function
 
 ///////////////////////////////////////////////////////////////////////
@@ -61,6 +84,7 @@ type RoomManager struct {
 	document		string
 	msgQueue 		*Queue[*UpdateMsg]
 	client 			[]*Client
+	startTime 		time.Time
 	lock			sync.RWMutex
 }
 
@@ -73,6 +97,7 @@ func NewRoomManager(roomID uint32) *RoomManager {
 	room.document 	= ""
 	room.client 	= make([]*Client, 255)
 	room.lock.Unlock()
+	room.startTime 		= time.Now()
 	return room
 }
 
@@ -130,6 +155,16 @@ func (room *RoomManager) AddClient(conn net.Conn) bool {
 	room.client[room.clientCount] = NewClient(room.clientCount, conn)
 	room.clientCount++
 	return true
+}
+
+func (room *RoomManager) StartTime() *time.Time {
+	return &room.startTime
+}
+
+// DeleteRoom closes all connections, somehow signal all threads 
+// to remove its conn and kill themselves.
+func (room *RoomManager) DeleteRoom() {
+	// TODO: Implement DeleteRoom
 }
 
 ///////////////////////////////////////////////////////////////////////
