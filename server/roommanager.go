@@ -43,6 +43,7 @@ func JoinRoom(roomID uint32) (*RoomManager, error) {
 		return roomManagers[roomID], nil
 	}
 
+	// no wraparound, check sides
 	if firstRoomID < nextRoomID {
 		if firstRoomID <= roomID && roomID < nextRoomID {
 			return roomManagers[roomID], nil
@@ -50,27 +51,38 @@ func JoinRoom(roomID uint32) (*RoomManager, error) {
 		return nil, errors.New("no rooms exists")
 	}
 
+	// wraparound, check middle
 	if nextRoomID <= roomID && roomID < firstRoomID {
 		return nil, errors.New("no rooms exists")
 	}
 	return roomManagers[roomID], nil
 }
 
+// AddRoom attempts to create a room, but rejects (returns error)
+// if max amount of room is exceeded and non of the room
+// has exceeded their guaranteed time.
 func AddRoom() (*RoomManager, error) {
 	roomsLock.Lock()
 	defer roomsLock.Unlock()
 
+	// if there is no room left available, we will check the first
+	// created room. 
+	// If such room exists longer than the guaranteed time,
+	// we terminate that room.
+	// Else we deny the room creation function.
 	if !noRoom && nextRoomID == firstRoomID {
-		dur := time.Now().Sub(*roomManagers[firstRoomID].StartTime())
+		dur := time.Since(*roomManagers[firstRoomID].StartTime())
 		if int64(dur) < maxGuranteedRoomDuration.Nanoseconds() {
 			return nil, errors.New("all room spots filled")
 		}
 		roomManagers[firstRoomID].DeleteRoom()
 		firstRoomID = (firstRoomID + 1) % maxRoomCount
 	}
-
+	
+	// Create room, increment nextRoomID
 	newRoom := NewRoomManager(nextRoomID)
 	roomManagers[nextRoomID] = newRoom
+	nextRoomID = (nextRoomID + 1) % maxRoomCount
 	return newRoom, nil
 }
 
