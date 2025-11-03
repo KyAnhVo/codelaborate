@@ -39,20 +39,18 @@ func JoinRoom(roomID uint32) (*RoomManager, error) {
 		return nil, errors.New("no room exists")
 	}
 
-	if firstRoomID == nextRoomID {
-		return roomManagers[roomID], nil
-	}
-
 	if firstRoomID < nextRoomID {
-		if firstRoomID <= roomID && roomID < nextRoomID {
-			return roomManagers[roomID], nil
+		if !(firstRoomID <= roomID && roomID < nextRoomID) {
+			return nil, errors.New("no rooms exists")
 		} 
-		return nil, errors.New("no rooms exists")
 	}
 
-	if nextRoomID <= roomID && roomID < firstRoomID {
-		return nil, errors.New("no rooms exists")
+	if firstRoomID > nextRoomID {
+		if nextRoomID <= roomID && roomID < firstRoomID {
+			return nil, errors.New("no rooms exists")
+		}
 	}
+
 	return roomManagers[roomID], nil
 }
 
@@ -148,13 +146,13 @@ func (room *RoomManager) GetClient(ID uint8) *Client {
 }
 
 // AddClient adds the client that uses such connection
-func (room *RoomManager) AddClient(conn net.Conn) bool {
+func (room *RoomManager) AddClient(conn net.Conn) (uint8, error) {
 	if room.clientCount == 255 {
-		return false
+		return 0, errors.New("No available slot")
 	}
 	room.client[room.clientCount] = NewClient(room.clientCount, conn)
 	room.clientCount++
-	return true
+	return room.clientCount - 1, nil
 }
 
 func (room *RoomManager) StartTime() *time.Time {
@@ -194,12 +192,15 @@ type UpdateMsg struct {
 type Client struct {
 	clientID 		uint8 	// partial key defined also by RoomID
 	connection 		net.Conn
+	readChann		chan *UpdateMsg
 }
 
 func NewClient(clientID uint8, c net.Conn) *Client {
+	chann := make(chan *UpdateMsg)
 	return &Client {
 		clientID: clientID,
 		connection: c,
+		readChann: chann,
 	}
 }
 
@@ -211,3 +212,6 @@ func (client *Client) Connection() net.Conn {
 	return client.connection
 }
 
+func (client *Client) ReadChan() chan *UpdateMsg {
+	return client.readChann
+}
