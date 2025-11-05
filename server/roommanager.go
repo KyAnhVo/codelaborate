@@ -7,74 +7,6 @@ import (
 	"time"
 )
 
-// Only 128 rooms are available at a time max.
-const maxRoomCount uint32 = 128
-
-// Duration room is guranteed to exist before being available to be kicked out
-const maxGuranteedRoomDuration = 30 * time.Minute
-
-///////////////////////////////////////////////////////////////////////
-
-// Each room will get its ID incrementally from here.
-
-var roomManagers []*RoomManager
-var nextRoomID	uint32 	= 0
-var firstRoomID	uint32 	= 0
-var noRoom 		bool 	= true
-var roomsLock sync.RWMutex
-
-// CreateRoomState creates state of rooms
-func CreateRoomState() {
-	roomsLock.Lock()
-	defer roomsLock.Unlock()
-	roomManagers = make([]*RoomManager, maxRoomCount)
-}
-
-// JoinRoom attempts to add user to new room. Thread-safe.
-func JoinRoom(roomID uint32) (*RoomManager, error) {
-	roomsLock.Lock()
-	defer roomsLock.Unlock()
-
-	if noRoom {
-		return nil, errors.New("no room exists")
-	}
-
-	if firstRoomID < nextRoomID {
-		if !(firstRoomID <= roomID && roomID < nextRoomID) {
-			return nil, errors.New("no rooms exists")
-		} 
-	}
-
-	if firstRoomID > nextRoomID {
-		if nextRoomID <= roomID && roomID < firstRoomID {
-			return nil, errors.New("no rooms exists")
-		}
-	}
-
-	return roomManagers[roomID], nil
-}
-
-func AddRoom() (*RoomManager, error) {
-	roomsLock.Lock()
-	defer roomsLock.Unlock()
-
-	if !noRoom && nextRoomID == firstRoomID {
-		dur := time.Now().Sub(*roomManagers[firstRoomID].StartTime())
-		if int64(dur) < maxGuranteedRoomDuration.Nanoseconds() {
-			return nil, errors.New("all room spots filled")
-		}
-		roomManagers[firstRoomID].DeleteRoom()
-		firstRoomID = (firstRoomID + 1) % maxRoomCount
-	}
-
-	newRoom := NewRoomManager(nextRoomID)
-	roomManagers[nextRoomID] = newRoom
-	return newRoom, nil
-}
-
-
-///////////////////////////////////////////////////////////////////////
-
 type RoomManager struct {
 	roomID 			uint32
 	clientCount 	uint8
@@ -82,48 +14,55 @@ type RoomManager struct {
 	msgQueue 		*Queue[*UpdateMsg]
 	client 			[]*Client
 	startTime 		time.Time
-	lock			sync.RWMutex
 	queueEdited		bool
+
+	lock			sync.RWMutex
+	lockSignal		sync.Cond
 }
 
 // NewRoomManager creates a RoomManager for a new room.
 func NewRoomManager(roomID uint32) *RoomManager {
 	room := new(RoomManager)
+	room.lockSignal = *sync.NewCond(&room.lock)
+
 	room.lock.Lock()
 	room.roomID = roomID
 	room.msgQueue = NewQueue[*UpdateMsg](0)
 	room.document = ""
 	room.client = make([]*Client, 255)
 	room.lock.Unlock()
+
 	room.startTime = time.Now()
 
 	go room.RoomMainManager()
 	return room
 }
 
-// Function to manage room
+// RoomMainManager is supposed to be threaded
+// out, gets all the update messages going in,
+// change them respectively and sends back to
+// all the client threads.
 func (room *RoomManager) RoomMainManager() {
-	for true {
-		room.RoomMainManagerIteration()
-	}
-}
-
-func (room *RoomManager) RoomMainManagerIteration() {
 	room.lock.Lock()
 	defer room.lock.Unlock()
 
-	if !room.queueEdited {
-		return
-	}
-	
-	// look through the queue and then edit the queue
-	for !room.msgQueue.IsEmpty() {
-		msg, ok := room.msgQueue.Dequeue()
-		if !ok {
-			return
-		}
-		for _, client := range room.client {
-			client.readChann <- msg
+	for true {
+		// sleep, woken up when a msg is enqueued.
+		room.lockSignal.Wait()
+
+		// look through the queue and then edit the msg and send
+		// to all the threads
+		for !room.msgQueue.IsEmpty() {
+			msg, ok := room.msgQueue.Dequeue()
+			if !ok {
+				return
+			}
+			for _, client := range room.client {
+				if msg.ClientID == client.clientID {
+					continue
+				}
+				client.readChann <- msg
+			}
 		}
 	}
 }
@@ -192,55 +131,4 @@ func (room *RoomManager) StartTime() *time.Time {
 // to remove its conn and kill themselves.
 func (room *RoomManager) DeleteRoom() {
 	// TODO: Implement DeleteRoom
-}
-
-///////////////////////////////////////////////////////////////////////
-
-// Message types (pure data types)
-
-type CreateJoinMsg struct {
-	Operation 		byte 	// 'C' or 'J'
-	RoomID 			uint32
-}
-
-
-type UpdateMsg struct {
-	ClientID		uint8	// partial key defined also by RoomID
-	// delete [CursorPos, CursorPos + DeleteLen - 1]
-	// then add InsertStr at CursorPos
-	CursorPos		uint64
-	DeleteLen		uint64
-	InsertLen		uint64
-	InsertStr		string
-}
-
-///////////////////////////////////////////////////////////////////////
-
-// Client type
-
-type Client struct {
-	clientID 		uint8 	// partial key defined also by RoomID
-	connection 		net.Conn
-	readChann		chan *UpdateMsg
-}
-
-func NewClient(clientID uint8, c net.Conn) *Client {
-	chann := make(chan *UpdateMsg)
-	return &Client {
-		clientID: clientID,
-		connection: c,
-		readChann: chann,
-	}
-}
-
-func (client *Client) ID() uint8 {
-	return client.clientID
-}
-
-func (client *Client) Connection() net.Conn {
-	return client.connection
-}
-
-func (client *Client) ReadChan() chan *UpdateMsg {
-	return client.readChann
 }
