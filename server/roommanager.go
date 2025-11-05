@@ -84,19 +84,37 @@ type RoomManager struct {
 	client 			[]*Client
 	startTime 		time.Time
 	lock			sync.RWMutex
+
+	queEditedLock	sync.Mutex
+	queueEdited		bool
 }
 
 // NewRoomManager creates a RoomManager for a new room.
 func NewRoomManager(roomID uint32) *RoomManager {
-	room 			:= new(RoomManager)
+	room := new(RoomManager)
 	room.lock.Lock()
-	room.roomID 	= roomID
-	room.msgQueue 	= NewQueue[*UpdateMsg](0)
-	room.document 	= ""
-	room.client 	= make([]*Client, 255)
+	room.roomID = roomID
+	room.msgQueue = NewQueue[*UpdateMsg](0)
+	room.document = ""
+	room.client = make([]*Client, 255)
 	room.lock.Unlock()
-	room.startTime 		= time.Now()
+	room.startTime = time.Now()
 	return room
+}
+
+// Function to manage room
+func (room *RoomManager) RoomMainManager() {
+	for true {
+		room.queEditedLock.Lock()
+		if !room.queueEdited {
+			room.queEditedLock.Unlock()
+			continue
+		}
+
+		room.lock.Lock()
+		
+		// look through the queue and then edit the queue
+	}
 }
 
 // RoomID returns id of room (constant)
