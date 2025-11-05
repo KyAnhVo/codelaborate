@@ -72,7 +72,6 @@ func AddRoom() (*RoomManager, error) {
 	return newRoom, nil
 }
 
-// TODO: implement CreateRoom function
 
 ///////////////////////////////////////////////////////////////////////
 
@@ -84,8 +83,6 @@ type RoomManager struct {
 	client 			[]*Client
 	startTime 		time.Time
 	lock			sync.RWMutex
-
-	queEditedLock	sync.Mutex
 	queueEdited		bool
 }
 
@@ -99,21 +96,35 @@ func NewRoomManager(roomID uint32) *RoomManager {
 	room.client = make([]*Client, 255)
 	room.lock.Unlock()
 	room.startTime = time.Now()
+
+	go room.RoomMainManager()
 	return room
 }
 
 // Function to manage room
 func (room *RoomManager) RoomMainManager() {
 	for true {
-		room.queEditedLock.Lock()
-		if !room.queueEdited {
-			room.queEditedLock.Unlock()
-			continue
-		}
+		room.RoomMainManagerIteration()
+	}
+}
 
-		room.lock.Lock()
-		
-		// look through the queue and then edit the queue
+func (room *RoomManager) RoomMainManagerIteration() {
+	room.lock.Lock()
+	defer room.lock.Unlock()
+
+	if !room.queueEdited {
+		return
+	}
+	
+	// look through the queue and then edit the queue
+	for !room.msgQueue.IsEmpty() {
+		msg, ok := room.msgQueue.Dequeue()
+		if !ok {
+			return
+		}
+		for _, client := range room.client {
+			client.readChann <- msg
+		}
 	}
 }
 
