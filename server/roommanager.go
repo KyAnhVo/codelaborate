@@ -17,13 +17,13 @@ type RoomManager struct {
 	queueEdited		bool
 
 	lock			sync.RWMutex
-	lockSignal		sync.Cond
+	lockSignal		*sync.Cond
 }
 
 // NewRoomManager creates a RoomManager for a new room.
 func NewRoomManager(roomID uint32) *RoomManager {
 	room := new(RoomManager)
-	room.lockSignal = *sync.NewCond(&room.lock)
+	room.lockSignal = sync.NewCond(&room.lock)
 
 	room.lock.Lock()
 	room.roomID = roomID
@@ -58,6 +58,10 @@ func (room *RoomManager) RoomMainManager() {
 				return
 			}
 			for _, client := range room.client {
+				if client == nil {
+					continue
+				}
+
 				if msg.ClientID == client.clientID {
 					continue
 				}
@@ -87,19 +91,7 @@ func (room *RoomManager) EnqueueMsg(msg *UpdateMsg) {
 	defer room.lock.Unlock()
 
 	room.msgQueue.Enqueue(msg)
-}
-
-// DequeueMsg dequeues a message for processing, or nil if
-// queue is empty.
-func (room *RoomManager) DequeueMsg() *UpdateMsg {
-	room.lock.Lock()
-	defer room.lock.Unlock()
-
-	msg, ok := room.msgQueue.Dequeue()
-	if ok {
-		return msg
-	}
-	return nil
+	room.lockSignal.Signal()
 }
 
 // GetClient gets the client given the client ID.
@@ -118,11 +110,12 @@ func (room *RoomManager) AddClient(conn net.Conn) (uint8, error) {
 	if room.clientCount == 255 {
 		return 0, errors.New("No available slot")
 	}
-	room.client[room.clientCount] = NewClient(room.clientCount, conn)
+	room.client[room.clientCount] = NewClient(room.clientCount, conn, room.msgQueue)
 	room.clientCount++
 	return room.clientCount - 1, nil
 }
 
+// StartTime returns the time since the room was started
 func (room *RoomManager) StartTime() *time.Time {
 	return &room.startTime
 }
@@ -131,4 +124,5 @@ func (room *RoomManager) StartTime() *time.Time {
 // to remove its conn and kill themselves.
 func (room *RoomManager) DeleteRoom() {
 	// TODO: Implement DeleteRoom
+	// Bruh where TF am I even starting at?
 }

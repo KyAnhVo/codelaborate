@@ -7,15 +7,17 @@ import (
 type Client struct {
 	clientID 		uint8 	// partial key defined also by RoomID
 	connection 		net.Conn
+	writeQueue		*Queue[*UpdateMsg]
 	readChann		chan *UpdateMsg
 }
 
-func NewClient(clientID uint8, c net.Conn) *Client {
+func NewClient(clientID uint8, c net.Conn, writeQueue *Queue[*UpdateMsg]) *Client {
 	chann := make(chan *UpdateMsg)
 	return &Client {
 		clientID: clientID,
 		connection: c,
 		readChann: chann,
+		writeQueue: writeQueue,
 	}
 }
 

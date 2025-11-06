@@ -1,29 +1,32 @@
 package main
 
 import (
+	"errors"
 	"net"
 	"sync"
 	"io"
 	"encoding/binary"
 )
 
+// HandleConnection handles a connection from the client and 
+// processes that connection
 func HandleConnection(wg *sync.WaitGroup, c net.Conn) {
 	defer wg.Done()
-	
 	joinMsg := GetConnection(c)
+
 	room, err := ProcessRoomRequest(joinMsg)
 	if err != nil {
 		io.WriteString(c, err.Error())
 	}
+
 	cliID, err := room.AddClient(c)
 	if err != nil {
 		io.WriteString(c, err.Error())
 	}
 	client := room.GetClient(cliID)
-}
 
-func handleRoomManagerThread(room *RoomManager) {
-
+	go ConnToRoomManager(client)
+	RoomManagerToConn(client)
 }
 
 // GetConnection receives join or create operation msg.
@@ -53,12 +56,28 @@ func GetConnection(c net.Conn) *CreateJoinMsg {
 }
 
 func ProcessRoomRequest(msg *CreateJoinMsg) (*RoomManager, error) {
-	var room *RoomManager
-	var err error
-	if msg.Operation == 'C' {
-		room, err = AddRoom()
-	} else if msg.Operation == 'J' {
-		room, err = JoinRoom(msg.RoomID)
+	switch msg.Operation {
+	case 'C':
+		return AddRoom()
+	case 'J':
+		return JoinRoom(msg.RoomID)
+	default:
+		return nil, errors.New("invalid operation")
 	}
-	return room, err
 }
+
+// For each client, 
+func ConnToRoomManager(client *Client) {
+	conn := client.Connection()
+	for {
+		
+	}
+}
+
+func RoomManagerToConn(client *Client) {
+
+}
+
+// -------------------------------------------------------------------------
+
+
