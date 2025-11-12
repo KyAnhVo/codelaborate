@@ -46,7 +46,7 @@ func (room *RoomManager) RoomMainManager() {
 	room.lock.Lock()
 	defer room.lock.Unlock()
 
-	for true {
+	for {
 		// sleep, woken up when a msg is enqueued.
 		room.lockSignal.Wait()
 
@@ -108,9 +108,9 @@ func (room *RoomManager) GetClient(ID uint8) *Client {
 // AddClient adds the client that uses such connection
 func (room *RoomManager) AddClient(conn net.Conn) (uint8, error) {
 	if room.clientCount == 255 {
-		return 0, errors.New("No available slot")
+		return 0, errors.New("no available slot")
 	}
-	room.client[room.clientCount] = NewClient(room.clientCount, conn, room.msgQueue)
+	room.client[room.clientCount] = NewClient(room.clientCount, conn, room, room.msgQueue)
 	room.clientCount++
 	return room.clientCount - 1, nil
 }

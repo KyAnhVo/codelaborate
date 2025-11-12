@@ -34,7 +34,7 @@ func JoinRoom(roomID uint32) (*RoomManager, error) {
 	}
 
 	if firstRoomID < nextRoomID {
-		if !(firstRoomID <= roomID && roomID < nextRoomID) {
+		if firstRoomID > roomID || roomID >= nextRoomID {
 			return nil, errors.New("no rooms exists")
 		} 
 	}
@@ -53,7 +53,7 @@ func AddRoom() (*RoomManager, error) {
 	defer roomsLock.Unlock()
 
 	if !noRoom && nextRoomID == firstRoomID {
-		dur := time.Now().Sub(*roomManagers[firstRoomID].StartTime())
+		dur := time.Since(*roomManagers[firstRoomID].StartTime())
 		if int64(dur) < maxGuranteedRoomDuration.Nanoseconds() {
 			return nil, errors.New("all room spots filled")
 		}
