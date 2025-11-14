@@ -29,6 +29,7 @@ func main() {
 	}
 	defer listener.Close()
 
+	CreateRoomState()
 	for {
 		conn, err := listener.Accept()
 		if err != nil {

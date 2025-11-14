@@ -87,7 +87,9 @@ func ConnToRoomManager(client *Client) {
 			msg.closeconn = CLOSECONN
 			continue
 		case UPDATE:
-			msg.closeconn = CLOSECONN
+			msg.closeconn = UPDATE
+		default:
+			continue
 		}
 
 		io.ReadFull(conn, uint64Buffer)

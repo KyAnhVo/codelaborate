@@ -11,7 +11,7 @@ const maxRoomCount uint32 = 128
 // Duration room is guranteed to exist before being available to be kicked out
 const maxGuranteedRoomDuration = 30 * time.Minute
 
-var roomManagers []*RoomManager
+var roomManagers []*RoomManager = nil
 var nextRoomID	uint32 	= 0
 var firstRoomID	uint32 	= 0
 var noRoom 		bool 	= true
@@ -63,5 +63,9 @@ func AddRoom() (*RoomManager, error) {
 
 	newRoom := NewRoomManager(nextRoomID)
 	roomManagers[nextRoomID] = newRoom
+
+	nextRoomID += 1
+	noRoom = false
+
 	return newRoom, nil
 }
