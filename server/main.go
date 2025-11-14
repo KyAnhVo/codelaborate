@@ -5,7 +5,20 @@ import (
 	"fmt"
 	"os"
 	"sync"
+	log "github.com/sirupsen/logrus"
 )
+
+func init() {
+    // Setup logging
+    log.SetFormatter(&log.TextFormatter{
+        ForceColors:     true,
+        FullTimestamp:   true,
+        TimestampFormat: "15:04:05",
+    })
+    log.SetOutput(os.Stdout)
+    log.SetLevel(log.DebugLevel)
+}
+
 
 var wg sync.WaitGroup
 
@@ -17,23 +30,24 @@ func main() {
 
 	arguments := os.Args
 	if len(arguments) != 2 {
-		fmt.Println("Usage: ./main.go <port_num>")
+		log.Error("Usage: ./main.go <port_num>")
 		return
 	}
 
 	PORT := ":" + arguments[1]
 	listener, err := net.Listen("tcp", PORT)
 	if err != nil {
-		fmt.Printf("Failure to open port at %s\n", PORT)
+		log.Errorf("Failure to open port at %s\n", PORT)
 		return
 	}
 	defer listener.Close()
 
 	CreateRoomState()
 	for {
+		log.Infof("Awaiting conn")
 		conn, err := listener.Accept()
 		if err != nil {
-			fmt.Println(err)
+			log.Error(err)
 			return
 		}
 		

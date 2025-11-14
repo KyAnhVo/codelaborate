@@ -6,6 +6,7 @@ import (
 	"sync"
 	"io"
 	"encoding/binary"
+	log "github.com/sirupsen/logrus"
 )
 
 // HandleConnection handles a connection from the client and 
@@ -24,6 +25,8 @@ func HandleConnection(wg *sync.WaitGroup, c net.Conn) {
 		io.WriteString(c, err.Error())
 	}
 	client := room.GetClient(cliID)
+
+	log.Infof("Client:\tID: %d\tROOM: %d", client.clientID, client.roomManager.roomID)
 
 	go ConnToRoomManager(client)
 	RoomManagerToConn(client)
