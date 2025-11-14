@@ -64,7 +64,7 @@ func AddRoom() (*RoomManager, error) {
 	newRoom := NewRoomManager(nextRoomID)
 	roomManagers[nextRoomID] = newRoom
 
-	nextRoomID += 1
+	nextRoomID = (nextRoomID + 1) % maxRoomCount
 	noRoom = false
 
 	return newRoom, nil

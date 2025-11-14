@@ -103,6 +103,8 @@ func ConnToRoomManager(client *Client) {
 		io.ReadFull(conn, strBuffer)
 		msg.InsertStr = string(strBuffer)
 
+		msg.ClientID = client.clientID
+
 		client.roomManager.EnqueueMsg(msg)
 	}
 }
