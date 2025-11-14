@@ -71,7 +71,7 @@ func ProcessRoomRequest(msg *CreateJoinMsg) (*RoomManager, error) {
 //	[1-8]		cursor position (0-indexed)
 //	[9-16]		delete length
 //	[17-24]		insert length
-//	[25-...]	insert string
+//	[25-...]	insert string (not null terminated)
 func ConnToRoomManager(client *Client) {
 	CLOSECONN := byte(1)
 	UPDATE := byte(0)
@@ -105,8 +105,32 @@ func ConnToRoomManager(client *Client) {
 	}
 }
 
+// RoomManagerToConn sends msgs to clients
+//	[0-0]		0 if close connection, 1 if update message
+// 	[1-8]		cursor position for edit
+//	[9-16]		delete length from cursor
+//	[17-24]		length of string to insert into cursor pos
+//	[25-...]	string to insert (not null terminated)
 func RoomManagerToConn(client *Client) {
+	closeconn := make([]byte, 1)
+	cursorPos := make([]byte, 8)
+	deleteLen := make([]byte, 8)
+	insertLen := make([]byte, 8)
+	var insertStr []byte
+	for {
+		msg := <- client.readChann
+		closeconn[0] = msg.closeconn
+		binary.BigEndian.PutUint64(cursorPos, msg.CursorPos)
+		binary.BigEndian.PutUint64(deleteLen, msg.DeleteLen)
+		binary.BigEndian.PutUint64(insertLen, msg.InsertLen)
+		insertStr = []byte(msg.InsertStr)
 
+		client.connection.Write(closeconn)
+		client.connection.Write(cursorPos)
+		client.connection.Write(deleteLen)
+		client.connection.Write(insertLen)
+		client.connection.Write(insertStr)
+	}
 }
 
 // -------------------------------------------------------------------------
