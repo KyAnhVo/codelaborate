@@ -1,49 +1,6 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef MAIN_WINDOW_H
+#define MAIN_WINDOW_H
 
-#include <QMainWindow>
-#include <QPushButton>
-#include <QLineEdit>
-#include <QPlainTextEdit>
-#include <QThread>
-#include <qtmetamacros.h>
 
-#include "editor.h"
-#include "network.h"
-
-class MainWindow : public QMainWindow {
-    Q_OBJECT
-
-public:
-    MainWindow(QWidget * parent=nullptr);
-    ~MainWindow();
-
-signals:
-    void connectToServer(Network::ConnType, std::string);
-    void sendReplacementInfo(int pos, int deleteLen, const QString& insertStr);
-
-public slots:
-    // buttons clicked slots
-    void createSessionClicked();
-    void joinSessionClicked();
-    void exitSessionClicked();
-
-    // editor update slots
-    void receiveUpdateLens(int, int, int);
-
-private:
-    bool has_session;
-    QThread networkThread;
-
-    QPushButton * createSessionButton,
-                * joinSessionButton,
-                * exitSessionButton;
-
-    QLineEdit * sessionIdLineEdit;
-    
-    Editor * editor;
-
-    Network * networkManager;
-};
 
 #endif
