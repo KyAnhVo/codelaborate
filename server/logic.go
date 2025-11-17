@@ -29,8 +29,9 @@ func HandleConnection(wg *sync.WaitGroup, c net.Conn) {
 		return
 	}
 	client := room.GetClient(cliID)
-
 	log.Infof("Client:\tID: %d\tROOM: %d", client.clientID, client.roomManager.roomID)
+
+	io.WriteString(c, "OK")
 
 	go ConnToRoomManager(client)
 	RoomManagerToConn(client)
