@@ -39,8 +39,8 @@ func HandleConnection(wg *sync.WaitGroup, c net.Conn) {
 
 // GetConnection receives join or create operation msg.
 // Binary msg layout (big-endian):
-// 	[0-5]  	uint8_t 	operation 	- Operation, either 'C' for create or 'J' for join
-// 	[1-5] 	uint32_t 	roomId 		- Id of room, ignored if operation == 'C' 
+// 	[0-0]  	uint8_t 	operation 	- Operation, either 'C' for create or 'J' for join
+// 	[1-4] 	uint32_t 	roomId 		- Id of room, ignored if operation == 'C' 
 // Message length = 5:
 func GetConnection(c net.Conn) *CreateJoinMsg {
 	opBuffer := make([]byte, 1)
@@ -91,13 +91,13 @@ func ConnToRoomManager(client *Client) {
 		msg := new(UpdateMsg)
 		io.ReadFull(conn, byteBuffer)
 		switch byteBuffer[0] {
-		case CLOSECONN:
-			msg.closeconn = CLOSECONN
-			continue
-		case UPDATE:
-			msg.closeconn = UPDATE
-		default:
-			continue
+			case CLOSECONN:
+				msg.closeconn = CLOSECONN
+				continue
+			case UPDATE:
+				msg.closeconn = UPDATE
+			default:
+				continue
 		}
 
 		io.ReadFull(conn, uint64Buffer)
