@@ -18,11 +18,15 @@ func HandleConnection(wg *sync.WaitGroup, c net.Conn) {
 	room, err := ProcessRoomRequest(joinMsg)
 	if err != nil {
 		io.WriteString(c, err.Error())
+		c.Close()
+		return
 	}
 
 	cliID, err := room.AddClient(c)
 	if err != nil {
 		io.WriteString(c, err.Error())
+		c.Close()
+		return
 	}
 	client := room.GetClient(cliID)
 
