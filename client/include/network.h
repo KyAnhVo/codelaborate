@@ -6,12 +6,10 @@
 #include <qtcpsocket.h>
 #include <qtmetamacros.h>
 
-enum class MsgOp {
-    CREATE,
-    JOIN,
-    CLOSE_CONN,
-    UPDATE,
-};
+enum class MsgOp;
+enum class EntryStatus;
+
+
 
 class Network : public QObject {
     Q_OBJECT
@@ -21,11 +19,29 @@ public:
 public slots:
     void sendUpdateMsg(MsgOp op, quint64 cursorPos, quint64 deleteLen, quint64 insertLen, QString& insertStr);
     void sendEntryMsg(MsgOp op, quint32 roomID);
+    void recvMsg();
+
+signals:
+    void updateMsgArrived(MsgOp op, quint64 cursorPos, quint64 deleteLen, quint64 insertLen, QString& insertStr);
+    void entrySucceed();
+    void entryFailed(const QString& msg);
     
 private:
     QString     serverIP;
     quint16     serverPort;
     QTcpSocket  socket;
+};
+
+enum class MsgOp {
+    CREATE,
+    JOIN,
+    CLOSE_CONN,
+    UPDATE,
+};
+
+enum class EntryStatus {
+    OK,
+    ERROR,
 };
 
 #endif

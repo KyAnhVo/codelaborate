@@ -65,3 +65,7 @@ void Network::sendEntryMsg(MsgOp op, quint32 roomID) {
 
     this->socket.write(buf);
 }
+
+void Network::recvMsg() {
+    
+}
