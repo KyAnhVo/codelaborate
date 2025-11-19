@@ -24,8 +24,16 @@ signals:
     void bogusSignal();
     
 private:
+    // helper functions to receive message
+
     void recvEntryMsg(char);
     void recvUpdateMsg(char);
+
+    // data extraction from socket
+
+    template <typename t>
+    t recvUnsignedIntOfType();
+    QByteArray readStr(quint64);
 
     QString     serverIP;
     quint16     serverPort;

@@ -73,7 +73,7 @@ void Network::recvMsg() {
     char buf[8];
 
     readData = this->socket.read(buf, 1);
-    switch (buf[0]) {
+    switch (buf[0]) { // not convert this to detect faulty msg status (4 to 7 might appear?)
         case static_cast<char>(MsgStatus::ENTRY_ERR):
         case static_cast<char>(MsgStatus::ENTRY_OK):
             this->recvEntryMsg(buf[0]);
@@ -89,8 +89,61 @@ void Network::recvMsg() {
 
 void Network::recvUpdateMsg(char msgStatus) {
     UpdateMsg msg;
+
+    switch (static_cast<MsgStatus>(msgStatus)) {
+        case MsgStatus::CLOSE_CONN:
+            msg.op = MsgOp::CLOSE_CONN;
+            break;
+        case MsgStatus::UPDATE:
+            msg.op = MsgOp::UPDATE;
+            break;
+        default: // never happens
+            throw std::runtime_error("Wrong function");
+    }
+
+    msg.cursorPos = this->recvUnsignedIntOfType<quint64>();
+    msg.deleteLen = this->recvUnsignedIntOfType<quint64>();
+    msg.insertLen = this->recvUnsignedIntOfType<quint64>();
+
+    QByteArray insertStr;
+    
 }
 
 void Network::recvEntryMsg(char msgStatus) {
+    switch (static_cast<MsgStatus>(msgStatus)) {
+        case MsgStatus::ENTRY_OK:
+            emit this->entrySucceed();
+            break;
+        case MsgStatus::ENTRY_ERR:
+            emit this->entryFailed();
+            break;
+        default: // never happens
+            throw std::runtime_error("Wrong function");
+    }
+}
 
+template <typename t>
+t Network::recvUnsignedIntOfType() {
+    static_assert(std::is_unsigned<t>::value && std::is_integral<t>::value,
+              "recvUnsignedIntOfType requires an unsigned integer type");
+
+    t val = 0;
+    qint64 dataSize = sizeof(t);
+    qint64 dataRead = 0;
+    while (dataRead < dataSize) {
+        dataRead += this->socket.read(
+                reinterpret_cast<char*>(&val) + dataRead, dataSize - dataRead);
+    }
+    return qFromBigEndian(val);
+}
+
+QByteArray Network::readStr(quint64 byteCount) {
+    quint64 bytesRead = 0;
+    char* buf = new char[byteCount];
+    while (bytesRead < byteCount) {
+        qint64 currRead = this->socket.read(
+                buf + bytesRead, byteCount - bytesRead);
+    }
+    QByteArray str = QByteArray(buf, byteCount);
+    return str;
 }
