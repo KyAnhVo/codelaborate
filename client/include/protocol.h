@@ -11,9 +11,11 @@ enum class MsgOp : uint8_t {
     UPDATE,
 };
 
-enum class EntryStatus : uint8_t {
-    OK,
-    ERROR,
+enum class MsgStatus : uint8_t {
+    UPDATE,
+    CLOSE_CONN,
+    ENTRY_OK,
+    ENTRY_ERR
 };
 
 struct UpdateMsg {

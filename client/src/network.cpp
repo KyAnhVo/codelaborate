@@ -1,4 +1,5 @@
 #include "network.h"
+#include "protocol.h"
 
 #include <QtEndian>
 #include <qendian.h>
@@ -67,5 +68,29 @@ void Network::sendEntryMsg(EntryMsg msg) {
 }
 
 void Network::recvMsg() {
-    quint64 read_data = 0;
+    quint64 readData = 0;
+    UpdateMsg msg;
+    char buf[8];
+
+    readData = this->socket.read(buf, 1);
+    switch (buf[0]) {
+        case static_cast<char>(MsgStatus::ENTRY_ERR):
+        case static_cast<char>(MsgStatus::ENTRY_OK):
+            this->recvEntryMsg(buf[0]);
+            break;
+        case static_cast<char>(MsgStatus::CLOSE_CONN):
+        case static_cast<char>(MsgStatus::UPDATE):
+            this->recvUpdateMsg(buf[0]);
+            break;
+        default:
+            emit this->bogusSignal();
+    }
+}
+
+void Network::recvUpdateMsg(char msgStatus) {
+    UpdateMsg msg;
+}
+
+void Network::recvEntryMsg(char msgStatus) {
+
 }

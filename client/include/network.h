@@ -20,9 +20,13 @@ public slots:
 signals:
     void updateMsgArrived(UpdateMsg);
     void entrySucceed();
-    void entryFailed(const QString& msg);
+    void entryFailed();
+    void bogusSignal();
     
 private:
+    void recvEntryMsg(char);
+    void recvUpdateMsg(char);
+
     QString     serverIP;
     quint16     serverPort;
     QTcpSocket  socket;

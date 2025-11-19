@@ -11,13 +11,13 @@ import (
 
 // HandleConnection handles a connection from the client and 
 // processes that connection
-// If there is an error, send code 1 to client. Else send code 0.
+// If there is an error, send code 3 to client. Else send code 2.
 func HandleConnection(wg *sync.WaitGroup, c net.Conn) {
 	errorCode := make([]byte, 1)
-	CODE_OK := byte(0)
-	CODE_ER := byte(1)
+	CodeOk := byte(2)
+	CodeEr := byte(3)
 
-	errorCode[0] = CODE_ER
+	errorCode[0] = CodeEr
 
 	defer wg.Done()
 	joinMsg := GetConnection(c)
@@ -38,7 +38,7 @@ func HandleConnection(wg *sync.WaitGroup, c net.Conn) {
 	client := room.GetClient(cliID)
 	log.Infof("Client:\tID: %d\tROOM: %d", client.clientID, client.roomManager.roomID)
 
-	errorCode[0] = CODE_OK
+	errorCode[0] = CodeOk
 	c.Write(errorCode)
 
 	go ConnToRoomManager(client)
@@ -83,7 +83,7 @@ func ProcessRoomRequest(msg *CreateJoinMsg) (*RoomManager, error) {
 }
 
 // ConnToRoomManager gets the following text from client:
-// 	[0-0]		0 if close connection, 1 if send text
+// 	[0-0]		1 if close connection, 0 if send text
 //	[1-8]		cursor position (0-indexed)
 //	[9-16]		delete length
 //	[17-24]		insert length
@@ -91,6 +91,7 @@ func ProcessRoomRequest(msg *CreateJoinMsg) (*RoomManager, error) {
 func ConnToRoomManager(client *Client) {
 	CLOSECONN := byte(1)
 	UPDATE := byte(0)
+
 	conn := client.Connection()
 	byteBuffer := make([]byte, 1)
 	uint64Buffer := make([]byte, 8)
