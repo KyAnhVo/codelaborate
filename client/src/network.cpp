@@ -11,11 +11,11 @@ Network::Network(QString serverIP, quint16 serverPort) {
     this->socket.connectToHost(serverIP, serverPort);
 }
 
-void Network::sendUpdateMsg(MsgOp op, quint64 cursorPos, quint64 deleteLen, quint64 insertLen, QString& insertStr) {
+void Network::sendUpdateMsg(UpdateMsg msg) {
     QByteArray buf;
 
     // append MsgOp
-    switch(op) {
+    switch(msg.op) {
         case MsgOp::CLOSE_CONN:
             buf.append(static_cast<quint8>(0));
             break;
@@ -27,28 +27,28 @@ void Network::sendUpdateMsg(MsgOp op, quint64 cursorPos, quint64 deleteLen, quin
     }
 
     // append cursorPos
-    cursorPos = qToBigEndian(cursorPos);
+    quint64 cursorPos = qToBigEndian(msg.cursorPos);
     buf.append(reinterpret_cast<char*>(&cursorPos), sizeof(cursorPos));
 
     // append deleteLen
-    deleteLen = qToBigEndian(deleteLen);
+    quint64 deleteLen = qToBigEndian(msg.deleteLen);
     buf.append(reinterpret_cast<char*>(&deleteLen), sizeof(deleteLen));
 
     // append insertLen
-    insertLen = qToBigEndian(insertLen);
+    quint64 insertLen = qToBigEndian(msg.insertLen);
     buf.append(reinterpret_cast<char*>(&insertLen), sizeof(insertLen));
 
     // append insertStr
-    buf.append(insertStr.toUtf8());
+    buf.append(msg.insertStr.toUtf8());
 
     this->socket.write(buf);
 }
 
-void Network::sendEntryMsg(MsgOp op, quint32 roomID) {
+void Network::sendEntryMsg(EntryMsg msg) {
     QByteArray buf;
 
     // append op
-    switch(op) {
+    switch(msg.op) {
         case MsgOp::JOIN:
             buf.append('J');
             break;
@@ -60,12 +60,12 @@ void Network::sendEntryMsg(MsgOp op, quint32 roomID) {
     }
 
     // append roomID
-    roomID = qToBigEndian(roomID);
+    quint32 roomID = qToBigEndian(msg.roomID);
     buf.append(reinterpret_cast<char*>(&roomID), sizeof(roomID));
 
     this->socket.write(buf);
 }
 
 void Network::recvMsg() {
-    
+    quint64 read_data = 0;
 }

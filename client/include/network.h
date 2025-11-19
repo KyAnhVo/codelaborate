@@ -2,14 +2,10 @@
 #define NETWORK_H
 
 #include <QTcpSocket>
-#include <qobject.h>
-#include <qtcpsocket.h>
-#include <qtmetamacros.h>
+#include <QObject>
+#include <QtTypes>
 
-enum class MsgOp;
-enum class EntryStatus;
-
-
+#include "protocol.h"
 
 class Network : public QObject {
     Q_OBJECT
@@ -17,12 +13,12 @@ public:
     explicit Network(QString serverIP, quint16 serverPort = 80);
 
 public slots:
-    void sendUpdateMsg(MsgOp op, quint64 cursorPos, quint64 deleteLen, quint64 insertLen, QString& insertStr);
-    void sendEntryMsg(MsgOp op, quint32 roomID);
+    void sendUpdateMsg(UpdateMsg);
+    void sendEntryMsg(EntryMsg);
     void recvMsg();
 
 signals:
-    void updateMsgArrived(MsgOp op, quint64 cursorPos, quint64 deleteLen, quint64 insertLen, QString& insertStr);
+    void updateMsgArrived(UpdateMsg);
     void entrySucceed();
     void entryFailed(const QString& msg);
     
@@ -30,18 +26,6 @@ private:
     QString     serverIP;
     quint16     serverPort;
     QTcpSocket  socket;
-};
-
-enum class MsgOp {
-    CREATE,
-    JOIN,
-    CLOSE_CONN,
-    UPDATE,
-};
-
-enum class EntryStatus {
-    OK,
-    ERROR,
 };
 
 #endif
