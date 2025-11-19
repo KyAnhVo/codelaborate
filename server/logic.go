@@ -11,27 +11,35 @@ import (
 
 // HandleConnection handles a connection from the client and 
 // processes that connection
+// If there is an error, send code 1 to client. Else send code 0.
 func HandleConnection(wg *sync.WaitGroup, c net.Conn) {
+	errorCode := make([]byte, 1)
+	CODE_OK := byte(0)
+	CODE_ER := byte(1)
+
+	errorCode[0] = CODE_ER
+
 	defer wg.Done()
 	joinMsg := GetConnection(c)
 
 	room, err := ProcessRoomRequest(joinMsg)
 	if err != nil {
-		io.WriteString(c, err.Error())
+		c.Write(errorCode)
 		c.Close()
 		return
 	}
 
 	cliID, err := room.AddClient(c)
 	if err != nil {
-		io.WriteString(c, err.Error())
+		c.Write(errorCode)
 		c.Close()
 		return
 	}
 	client := room.GetClient(cliID)
 	log.Infof("Client:\tID: %d\tROOM: %d", client.clientID, client.roomManager.roomID)
 
-	io.WriteString(c, "OK")
+	errorCode[0] = CODE_OK
+	c.Write(errorCode)
 
 	go ConnToRoomManager(client)
 	RoomManagerToConn(client)
