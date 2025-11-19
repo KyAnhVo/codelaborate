@@ -2,7 +2,7 @@
 #define PROTOCOL_H
 
 #include <QtTypes>
-#include <QString>
+#include <QByteArray>
 
 enum class MsgOp : uint8_t {
     CREATE,
@@ -23,7 +23,7 @@ struct UpdateMsg {
     quint64 cursorPos;
     quint64 deleteLen;
     quint64 insertLen;
-    QString insertStr;
+    QByteArray insertStr;
 };
 
 struct EntryMsg {

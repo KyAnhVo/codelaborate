@@ -40,7 +40,7 @@ void Network::sendUpdateMsg(UpdateMsg msg) {
     buf.append(reinterpret_cast<char*>(&insertLen), sizeof(insertLen));
 
     // append insertStr
-    buf.append(msg.insertStr.toUtf8());
+    buf.append(msg.insertStr);
 
     this->socket.write(buf);
 }
@@ -104,9 +104,7 @@ void Network::recvUpdateMsg(char msgStatus) {
     msg.cursorPos = this->recvUnsignedIntOfType<quint64>();
     msg.deleteLen = this->recvUnsignedIntOfType<quint64>();
     msg.insertLen = this->recvUnsignedIntOfType<quint64>();
-
-    QByteArray insertStr;
-    
+    msg.insertStr = this->readStr(msg.insertLen);
 }
 
 void Network::recvEntryMsg(char msgStatus) {
