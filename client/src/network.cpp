@@ -3,7 +3,9 @@
 
 #include <QtEndian>
 #include <qendian.h>
+#include <qlogging.h>
 #include <qobject.h>
+#include <QDebug>
 #include <stdexcept>
 
 Network::Network(QString serverIP, quint16 serverPort) {
@@ -15,6 +17,8 @@ Network::Network(QString serverIP, quint16 serverPort) {
     if (!this->socket.waitForConnected(3000)) {  // 3 second timeout
         qWarning() << "Failed to connect:" << this->socket.errorString();
     }
+    this->socket.setSocketOption(QAbstractSocket::LowDelayOption, 1);
+    this->socket.setSocketOption(QAbstractSocket::KeepAliveOption, 1);
 
     connect(&(this->socket), &QTcpSocket::readyRead,
             this, &Network::recvMsg);
@@ -76,6 +80,7 @@ void Network::sendEntryMsg(EntryMsg msg) {
 }
 
 void Network::recvMsg() {
+    qDebug() << "Enter recvMsg()";
     quint64 readData = 0;
     UpdateMsg msg;
     char buf;
@@ -93,9 +98,11 @@ void Network::recvMsg() {
         default:
             emit this->bogusSignal();
     }
+    qDebug() << "Exit recvMsg()";
 }
 
 void Network::recvUpdateMsg(char msgStatus) {
+    qDebug() << "Enter recvUpdateMsg()";
     UpdateMsg msg;
 
     switch (static_cast<MsgStatus>(msgStatus)) {
@@ -110,29 +117,40 @@ void Network::recvUpdateMsg(char msgStatus) {
     }
 
     msg.cursorPos = this->recvUnsignedIntOfType<quint64>();
+    qDebug() << "CursorPos: " << msg.cursorPos;
     msg.deleteLen = this->recvUnsignedIntOfType<quint64>();
+    qDebug() << "deleteLen: " << msg.deleteLen;
     msg.insertLen = this->recvUnsignedIntOfType<quint64>();
+    qDebug() << "insertLen: " << msg.insertLen;
     msg.insertStr = this->readStr(msg.insertLen);
+    qDebug() << "insertStr: " << QString::fromUtf8(msg.insertStr);
 
     if (msg.op == MsgOp::CLOSE_CONN)
         emit this->closeConnMsgArrived();
     else
         emit this->updateMsgArrived(msg);
+    qDebug() << "Exit recvUpdateMsg()";
 }
 
 void Network::recvEntryMsg(char msgStatus) {
+    qDebug() << "Enter recvEntryMsg()";
     switch (static_cast<MsgStatus>(msgStatus)) {
-        case MsgStatus::ENTRY_OK:
-            ;
-            emit this->entrySucceed(
-                    this->recvUnsignedIntOfType<quint32>());
-            break;
+        case MsgStatus::ENTRY_OK: {
+                qDebug() << "Entry successful";
+                quint32 roomID = this->recvUnsignedIntOfType<quint32>();
+                qDebug() << "Entry successful for roomID "
+                    << roomID;
+                emit this->entrySucceed(roomID);
+                break;
+            }
         case MsgStatus::ENTRY_ERR:
+            qDebug() << "Entry failed";
             emit this->entryFailed();
             break;
         default: // never happens
             throw std::runtime_error("Wrong function");
     }
+    qDebug() << "Exit recvEntryMsg()";
 }
 
 template <typename t>
@@ -143,8 +161,17 @@ t Network::recvUnsignedIntOfType() {
     qint64 dataSize = sizeof(t);
     qint64 dataRead = 0;
     while (dataRead < dataSize) {
-        dataRead += this->socket.read(
+        // Wait for data
+        if (this->socket.bytesAvailable() < (dataSize - dataRead)) {
+            if (!this->socket.waitForReadyRead(3000)) {
+                qWarning() << "Timeout reading integer";
+                return 0;
+            }
+        }
+        
+        qint64 justRead = this->socket.read(
                 reinterpret_cast<char*>(&val) + dataRead, dataSize - dataRead);
+        dataRead += justRead;
     }
     return qFromBigEndian(val);
 }
@@ -153,6 +180,14 @@ QByteArray Network::readStr(quint64 byteCount) {
     quint64 bytesRead = 0;
     char* buf = new char[byteCount];
     while (bytesRead < byteCount) {
+        // Wait for data to be available
+        if (this->socket.bytesAvailable() == 0) {
+            if (!this->socket.waitForReadyRead(3000)) {  // 3 second timeout
+                qWarning() << "Timeout waiting for" << byteCount << "bytes, got" << bytesRead;
+                delete[] buf;
+                return QByteArray();
+            }
+        }
         qint64 currRead = this->socket.read(
                 buf + bytesRead, byteCount - bytesRead);
         bytesRead += currRead;

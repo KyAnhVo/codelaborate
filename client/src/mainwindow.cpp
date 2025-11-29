@@ -1,5 +1,7 @@
 #include "mainwindow.h"
 #include "editor.h"
+
+#include <iostream>
 #include <QtWidgets>
 #include <qboxlayout.h>
 #include <qwidget.h>
@@ -73,18 +75,23 @@ void MainWindow::setupGui() {
 }
 
 void MainWindow::joinRoom() {
+    std::cout << "enter joinRoom()" << std::endl;
     QString roomID = this->roomIDLineEdit->text();
     EntryMsg msg;
     msg.roomID = static_cast<quint32>(roomID.toUInt());
     msg.op = MsgOp::JOIN;
+    std::cout << "Joining room, roomID = " << msg.roomID << std::endl;
     emit this->sendEntryMsg(msg);
+    std::cout << "exit joinRoom()" << std::endl;
 }
 
 void MainWindow::createRoom() {
+    std::cout << "enter createRoom()" << std::endl;
     EntryMsg msg;
     msg.roomID = 0; // room id does not matter
     msg.op = MsgOp::CREATE;
     emit this->sendEntryMsg(msg);
+    std::cout << "exit createRoom()" << std::endl;
 }
 
 void MainWindow::onJoinRoomSucceed(quint32 roomID) {

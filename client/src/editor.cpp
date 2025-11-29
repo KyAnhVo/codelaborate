@@ -10,12 +10,12 @@ void Editor::onContentsChanged(int position, int deleteLen, int insertLen) {
     if (applyingRemoteEdit) return;
 
     qDebug() << "Editor change:" << position << deleteLen << insertLen;
+    if (deleteLen == 0 && insertLen == 0) return;
 
     UpdateMsg msg;
     msg.op = MsgOp::UPDATE;
     msg.cursorPos = position;
     msg.deleteLen = deleteLen;
-    msg.insertLen = insertLen;
 
     if (insertLen > 0) {
         // get test from [position, position + insertLen)
@@ -23,12 +23,17 @@ void Editor::onContentsChanged(int position, int deleteLen, int insertLen) {
         cursor.setPosition(position);
         cursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, insertLen);
         msg.insertStr = cursor.selectedText().toUtf8();
+        msg.insertLen = msg.insertStr.length();
+    } else {
+        msg.insertLen = 0;
     }
 
     emit this->edited(msg);
 }
 
 void Editor::applyRemoteEdit(UpdateMsg msg) {
+    qDebug() << "Remote change: " << msg.cursorPos
+        << msg.deleteLen << msg.insertLen << msg.insertStr;
     applyingRemoteEdit = true;
     this->blockSignals(true);
     this->document()->setUndoRedoEnabled(false);

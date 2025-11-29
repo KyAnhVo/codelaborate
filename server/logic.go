@@ -41,7 +41,14 @@ func HandleConnection(wg *sync.WaitGroup, c net.Conn) {
 	// send error code CodeOk + roomID
 	errorCode[0] = CodeOk
 	c.Write(errorCode)
-	sendUint32(c, room.roomID)
+	err = sendUint32(c, room.roomID)
+	if err != nil {
+		log.Errorf("Failed to send roomID: %v", err)
+		c.Close()
+		return
+	} else {
+		log.Infof("send complete")
+	}
 	
 	go ConnToRoomManager(client)
 	RoomManagerToConn(client)
@@ -99,8 +106,13 @@ func ConnToRoomManager(client *Client) {
 	uint64Buffer := make([]byte, 8)
 	var strBuffer []byte
 	for {
+		var err error
 		msg := new(UpdateMsg)
-		io.ReadFull(conn, byteBuffer)
+		_, err = io.ReadFull(conn, byteBuffer)
+		if err != nil {
+			client.connection.Close()
+			return
+		}
 		switch byteBuffer[0] {
 			case CLOSECONN:
 				msg.closeconn = CLOSECONN
@@ -111,15 +123,33 @@ func ConnToRoomManager(client *Client) {
 				continue
 		}
 
-		io.ReadFull(conn, uint64Buffer)
+		_, err = io.ReadFull(conn, uint64Buffer)
+		if err != nil {
+			client.connection.Close()
+			return
+		}
 		msg.CursorPos = binary.BigEndian.Uint64(uint64Buffer)
-		io.ReadFull(conn, uint64Buffer)
+
+		_, err = io.ReadFull(conn, uint64Buffer)
+		if err != nil {
+			client.connection.Close()
+			return
+		}
 		msg.DeleteLen = binary.BigEndian.Uint64(uint64Buffer)
-		io.ReadFull(conn, uint64Buffer)
+
+		_, err = io.ReadFull(conn, uint64Buffer)
+		if err != nil {
+			client.connection.Close()
+			return
+		}
 		msg.InsertLen = binary.BigEndian.Uint64(uint64Buffer)
 
 		strBuffer = make([]byte, msg.InsertLen)
-		io.ReadFull(conn, strBuffer)
+		_, err = io.ReadFull(conn, strBuffer)
+		if err != nil {
+			client.connection.Close()
+			return
+		}
 		msg.InsertStr = string(strBuffer)
 
 		msg.ClientID = client.clientID
@@ -148,16 +178,34 @@ func RoomManagerToConn(client *Client) {
 		binary.BigEndian.PutUint64(insertLen, msg.InsertLen)
 		insertStr = []byte(msg.InsertStr)
 
+		log.Infof("msg: %d\t%d\t%d\t%s", msg.CursorPos, msg.DeleteLen, msg.InsertLen, msg.InsertStr)
+
+		var err error
 		// client.connection.Write(closeconn)
-		writeAll(client.connection, closeconn)
+		err = writeAll(client.connection, closeconn)
+		if err != nil {
+			log.Errorf("send failed: closeconn")
+		}
 		// client.connection.Write(cursorPos)
-		writeAll(client.connection, cursorPos)
+		err = writeAll(client.connection, cursorPos)
+		if err != nil {
+			log.Errorf("send failed: closeconn")
+		}
 		// client.connection.Write(deleteLen)
-		writeAll(client.connection, deleteLen)
+		err = writeAll(client.connection, deleteLen)
+		if err != nil {
+			log.Errorf("send failed: closeconn")
+		}
 		// client.connection.Write(insertLen)
-		writeAll(client.connection, insertLen)
+		err = writeAll(client.connection, insertLen)
+		if err != nil {
+			log.Errorf("send failed: closeconn")
+		}
 		// client.connection.Write(insertStr)
-		writeAll(client.connection, insertStr)
+		err = writeAll(client.connection, insertStr)
+		if err != nil {
+			log.Errorf("send failed: closeconn")
+		}
 	}
 }
 
@@ -173,10 +221,10 @@ func writeAll(conn net.Conn, data []byte) error {
     return nil
 }
 
-func sendUint32(c net.Conn, num uint32) {
+func sendUint32(c net.Conn, num uint32) error {
 	bytearr := make([]byte, 4)
 	binary.BigEndian.PutUint32(bytearr, num)
-	writeAll(c, bytearr)
+	return writeAll(c, bytearr)
 }
 
 // -------------------------------------------------------------------------
