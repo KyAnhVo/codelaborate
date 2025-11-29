@@ -19,7 +19,8 @@ public slots:
 
 signals:
     void updateMsgArrived(UpdateMsg);
-    void entrySucceed();
+    void closeConnMsgArrived();
+    void entrySucceed(quint32 roomID);
     void entryFailed();
     void bogusSignal();
     

@@ -3,6 +3,7 @@
 
 #include "network.h"
 #include "protocol.h"
+#include "editor.h"
 
 #include <QMainWindow>
 #include <QPushButton>
@@ -17,17 +18,31 @@ public:
     explicit MainWindow(QString, quint16);
 
 public slots:
+    void joinRoom();
+    void createRoom();
+    void disconnect();
+    void onJoinRoomSucceed(quint32);
+    void onJoinRoomFailed();
 
 signals:
-
+    void sendEntryMsg(EntryMsg msg);
 
 private:
+    // Qt GUI objects
     QPushButton     * joinRoomButton,
-                    * createRoomButton;
+                    * createRoomButton,
+                    * exitRoomButton;
     QLabel          * roomIDLabel;
     QLineEdit       * roomIDLineEdit;
-    QPlainTextEdit  * editor;
+    Editor          * editor;
     Network         * networkManager;
+
+    // status values
+    bool            connected;
+
+    // helper functions
+    void connectObjs();
+    void setupGui();
 };
 
 #endif

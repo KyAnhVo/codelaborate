@@ -73,17 +73,17 @@ void Network::sendEntryMsg(EntryMsg msg) {
 void Network::recvMsg() {
     quint64 readData = 0;
     UpdateMsg msg;
-    char buf[8];
+    char buf;
 
-    readData = this->socket.read(buf, 1);
-    switch (buf[0]) { // not convert this to detect faulty msg status (4 to 7 might appear?)
+    readData = this->socket.read(&buf, 1);
+    switch (buf) { // not convert this to detect faulty msg status (4 to 7 might appear?)
         case static_cast<char>(MsgStatus::ENTRY_ERR):
         case static_cast<char>(MsgStatus::ENTRY_OK):
-            this->recvEntryMsg(buf[0]);
+            this->recvEntryMsg(buf);
             break;
         case static_cast<char>(MsgStatus::CLOSE_CONN):
         case static_cast<char>(MsgStatus::UPDATE):
-            this->recvUpdateMsg(buf[0]);
+            this->recvUpdateMsg(buf);
             break;
         default:
             emit this->bogusSignal();
@@ -109,13 +109,18 @@ void Network::recvUpdateMsg(char msgStatus) {
     msg.insertLen = this->recvUnsignedIntOfType<quint64>();
     msg.insertStr = this->readStr(msg.insertLen);
 
-    emit this->updateMsgArrived(msg);
+    if (msg.op == MsgOp::CLOSE_CONN)
+        emit this->closeConnMsgArrived();
+    else
+        emit this->updateMsgArrived(msg);
 }
 
 void Network::recvEntryMsg(char msgStatus) {
     switch (static_cast<MsgStatus>(msgStatus)) {
         case MsgStatus::ENTRY_OK:
-            emit this->entrySucceed();
+            ;
+            emit this->entrySucceed(
+                    this->recvUnsignedIntOfType<quint32>());
             break;
         case MsgStatus::ENTRY_ERR:
             emit this->entryFailed();

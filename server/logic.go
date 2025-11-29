@@ -37,10 +37,12 @@ func HandleConnection(wg *sync.WaitGroup, c net.Conn) {
 	}
 	client := room.GetClient(cliID)
 	log.Infof("Client:\tID: %d\tROOM: %d", client.clientID, client.roomManager.roomID)
-
+	
+	// send error code CodeOk + roomID
 	errorCode[0] = CodeOk
 	c.Write(errorCode)
-
+	sendUint32(c, room.roomID)
+	
 	go ConnToRoomManager(client)
 	RoomManagerToConn(client)
 }
@@ -146,12 +148,35 @@ func RoomManagerToConn(client *Client) {
 		binary.BigEndian.PutUint64(insertLen, msg.InsertLen)
 		insertStr = []byte(msg.InsertStr)
 
-		client.connection.Write(closeconn)
-		client.connection.Write(cursorPos)
-		client.connection.Write(deleteLen)
-		client.connection.Write(insertLen)
-		client.connection.Write(insertStr)
+		// client.connection.Write(closeconn)
+		writeAll(client.connection, closeconn)
+		// client.connection.Write(cursorPos)
+		writeAll(client.connection, cursorPos)
+		// client.connection.Write(deleteLen)
+		writeAll(client.connection, deleteLen)
+		// client.connection.Write(insertLen)
+		writeAll(client.connection, insertLen)
+		// client.connection.Write(insertStr)
+		writeAll(client.connection, insertStr)
 	}
+}
+
+func writeAll(conn net.Conn, data []byte) error {
+    written := 0
+    for written < len(data) {
+        n, err := conn.Write(data[written:])
+        if err != nil {
+            return err
+        }
+        written += n
+    }
+    return nil
+}
+
+func sendUint32(c net.Conn, num uint32) {
+	bytearr := make([]byte, 4)
+	binary.BigEndian.PutUint32(bytearr, num)
+	writeAll(c, bytearr)
 }
 
 // -------------------------------------------------------------------------
