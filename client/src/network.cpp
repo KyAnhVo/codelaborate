@@ -10,6 +10,9 @@ Network::Network(QString serverIP, quint16 serverPort) {
     this->serverPort = serverPort;
     this->serverIP = serverIP;
     this->socket.connectToHost(serverIP, serverPort);
+
+    connect(&(this->socket), &QTcpSocket::readyRead,
+            this, &Network::recvMsg);
 }
 
 void Network::sendUpdateMsg(UpdateMsg msg) {
@@ -105,6 +108,8 @@ void Network::recvUpdateMsg(char msgStatus) {
     msg.deleteLen = this->recvUnsignedIntOfType<quint64>();
     msg.insertLen = this->recvUnsignedIntOfType<quint64>();
     msg.insertStr = this->readStr(msg.insertLen);
+
+    emit this->updateMsgArrived(msg);
 }
 
 void Network::recvEntryMsg(char msgStatus) {
@@ -124,7 +129,6 @@ template <typename t>
 t Network::recvUnsignedIntOfType() {
     static_assert(std::is_unsigned<t>::value && std::is_integral<t>::value,
               "recvUnsignedIntOfType requires an unsigned integer type");
-
     t val = 0;
     qint64 dataSize = sizeof(t);
     qint64 dataRead = 0;
@@ -141,6 +145,7 @@ QByteArray Network::readStr(quint64 byteCount) {
     while (bytesRead < byteCount) {
         qint64 currRead = this->socket.read(
                 buf + bytesRead, byteCount - bytesRead);
+        bytesRead += currRead;
     }
     QByteArray str = QByteArray(buf, byteCount);
     return str;
