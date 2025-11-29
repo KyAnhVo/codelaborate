@@ -11,6 +11,11 @@ Network::Network(QString serverIP, quint16 serverPort) {
     this->serverIP = serverIP;
     this->socket.connectToHost(serverIP, serverPort);
 
+    // Wait for connection (blocking, but simple for MVP)
+    if (!this->socket.waitForConnected(3000)) {  // 3 second timeout
+        qWarning() << "Failed to connect:" << this->socket.errorString();
+    }
+
     connect(&(this->socket), &QTcpSocket::readyRead,
             this, &Network::recvMsg);
 }
@@ -21,10 +26,10 @@ void Network::sendUpdateMsg(UpdateMsg msg) {
     // append MsgOp
     switch(msg.op) {
         case MsgOp::CLOSE_CONN:
-            buf.append(static_cast<quint8>(0));
+            buf.append(static_cast<quint8>(1));
             break;
         case MsgOp::UPDATE:
-            buf.append(static_cast<quint8>(1));
+            buf.append(static_cast<quint8>(0));
             break;
         default:
             throw std::runtime_error("Operation invalid for Update msg");

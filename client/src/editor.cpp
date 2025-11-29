@@ -7,7 +7,12 @@ Editor::Editor() : QPlainTextEdit() {
 }
 
 void Editor::onContentsChanged(int position, int deleteLen, int insertLen) {
+    if (applyingRemoteEdit) return;
+
+    qDebug() << "Editor change:" << position << deleteLen << insertLen;
+
     UpdateMsg msg;
+    msg.op = MsgOp::UPDATE;
     msg.cursorPos = position;
     msg.deleteLen = deleteLen;
     msg.insertLen = insertLen;
@@ -24,6 +29,7 @@ void Editor::onContentsChanged(int position, int deleteLen, int insertLen) {
 }
 
 void Editor::applyRemoteEdit(UpdateMsg msg) {
+    applyingRemoteEdit = true;
     this->blockSignals(true);
     this->document()->setUndoRedoEnabled(false);
     QTextCursor cursor(this->document());
@@ -43,4 +49,5 @@ void Editor::applyRemoteEdit(UpdateMsg msg) {
 
     this->document()->setUndoRedoEnabled(true);
     this->blockSignals(false);
+    applyingRemoteEdit = false;
 }

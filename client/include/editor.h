@@ -15,6 +15,8 @@ public slots:
 
 signals:
     void edited(UpdateMsg msg);
+private:
+    bool applyingRemoteEdit = false;
 };
 
 #endif
