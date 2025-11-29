@@ -19,11 +19,13 @@ void Editor::onContentsChanged(int position, int deleteLen, int insertLen) {
 
     if (insertLen > 0) {
         // get test from [position, position + insertLen)
-        QTextCursor cursor(this->document());
-        cursor.setPosition(position);
-        cursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, insertLen);
-        msg.insertStr = cursor.selectedText().toUtf8();
-        msg.insertLen = msg.insertStr.length();
+
+        // Get raw text from document (preserves newlines)
+        QString fullText = this->document()->toPlainText();
+        QString text = fullText.mid(position, insertLen);
+        
+        msg.insertStr = text.toUtf8();
+        msg.insertLen = msg.insertStr.size();
     } else {
         msg.insertLen = 0;
     }
