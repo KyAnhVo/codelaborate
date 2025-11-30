@@ -81,23 +81,26 @@ void Network::sendEntryMsg(EntryMsg msg) {
 
 void Network::recvMsg() {
     qDebug() << "Enter recvMsg()";
-    quint64 readData = 0;
     UpdateMsg msg;
     char buf;
 
-    readData = this->socket.read(&buf, 1);
-    switch (buf) { // not convert this to detect faulty msg status (4 to 7 might appear?)
-        case static_cast<char>(MsgStatus::ENTRY_ERR):
-        case static_cast<char>(MsgStatus::ENTRY_OK):
-            this->recvEntryMsg(buf);
-            break;
-        case static_cast<char>(MsgStatus::CLOSE_CONN):
-        case static_cast<char>(MsgStatus::UPDATE):
-            this->recvUpdateMsg(buf);
-            break;
-        default:
-            emit this->bogusSignal();
+    while (this->socket.bytesAvailable() > 0) {
+        if (this->socket.read(&buf, 1) == 0) 
+            throw std::runtime_error("failure to receive info");
+        switch (buf) { // not convert this to detect faulty msg status (4 to 7 might appear?)
+            case static_cast<char>(MsgStatus::ENTRY_ERR):
+            case static_cast<char>(MsgStatus::ENTRY_OK):
+                this->recvEntryMsg(buf);
+                break;
+            case static_cast<char>(MsgStatus::CLOSE_CONN):
+            case static_cast<char>(MsgStatus::UPDATE):
+                this->recvUpdateMsg(buf);
+                break;
+            default:
+                emit this->bogusSignal();
+        }
     }
+
     qDebug() << "Exit recvMsg()";
 }
 
