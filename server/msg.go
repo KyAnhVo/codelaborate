@@ -17,3 +17,12 @@ type UpdateMsg struct {
 	InsertStr		string
 }
 
+func (this *UpdateMsg) Compare(other *UpdateMsg) int {
+	if this.CursorPos == other.CursorPos {
+		return 0
+	} else if this.CursorPos > other.CursorPos {
+		return 1
+	} else {
+		return -1
+	}
+}
