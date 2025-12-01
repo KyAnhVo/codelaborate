@@ -141,8 +141,11 @@ void Network::recvEntryMsg(char msgStatus) {
         case MsgStatus::ENTRY_OK: {
                 qDebug() << "Entry successful";
                 quint32 roomID = this->recvUnsignedIntOfType<quint32>();
+
+                quint8 clientID = this->recvUnsignedIntOfType<quint8>();
                 qDebug() << "Entry successful for roomID "
-                    << roomID;
+                    << roomID
+                    << " with clientID " << clientID;
                 emit this->entrySucceed(roomID);
                 break;
             }

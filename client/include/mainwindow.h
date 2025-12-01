@@ -21,7 +21,7 @@ public slots:
     void joinRoom();
     void createRoom();
     void disconnect();
-    void onJoinRoomSucceed(quint32);
+    void onJoinRoomSucceed(quint32, quint8);
     void onJoinRoomFailed();
 
 signals:

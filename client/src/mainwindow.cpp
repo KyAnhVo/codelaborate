@@ -94,7 +94,7 @@ void MainWindow::createRoom() {
     std::cout << "exit createRoom()" << std::endl;
 }
 
-void MainWindow::onJoinRoomSucceed(quint32 roomID) {
+void MainWindow::onJoinRoomSucceed(quint32 roomID, quint8 clientID) {
     this->roomIDLineEdit->setText(QString::number(roomID));
     this->roomIDLineEdit->setReadOnly(true);
     this->exitRoomButton->setDisabled(false);

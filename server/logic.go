@@ -46,10 +46,14 @@ func HandleConnection(wg *sync.WaitGroup, c net.Conn) {
 		log.Errorf("Failed to send roomID: %v", err)
 		c.Close()
 		return
-	} else {
-		log.Infof("send complete")
 	}
-	
+	err = sendUint8(c, client.clientID)
+	if err != nil {
+		log.Errorf("Failed to send clientID: %v", err)
+		c.Close()
+		return
+	}
+
 	go ConnToRoomManager(client)
 	RoomManagerToConn(client)
 }
@@ -178,8 +182,6 @@ func RoomManagerToConn(client *Client) {
 		binary.BigEndian.PutUint64(insertLen, msg.InsertLen)
 		insertStr = []byte(msg.InsertStr)
 
-		log.Infof("msg: %d\t%d\t%d\t%s", msg.CursorPos, msg.DeleteLen, msg.InsertLen, msg.InsertStr)
-
 		var err error
 		// client.connection.Write(closeconn)
 		err = writeAll(client.connection, closeconn)
@@ -224,6 +226,12 @@ func writeAll(conn net.Conn, data []byte) error {
 func sendUint32(c net.Conn, num uint32) error {
 	bytearr := make([]byte, 4)
 	binary.BigEndian.PutUint32(bytearr, num)
+	return writeAll(c, bytearr)
+}
+
+func sendUint8(c net.Conn, num uint8) error {
+	bytearr := make([]byte, 1)
+	bytearr[0] = num
 	return writeAll(c, bytearr)
 }
 
