@@ -61,10 +61,6 @@ func (room *RoomManager) RoomMainManager() {
 				if client == nil {
 					continue
 				}
-
-				if msg.ClientID == client.clientID {
-					continue
-				}
 				client.readChann <- msg
 			}
 		}

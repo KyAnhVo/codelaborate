@@ -188,25 +188,29 @@ func RoomManagerToConn(client *Client) {
 		if err != nil {
 			log.Errorf("send failed: closeconn")
 		}
+		err = sendUint8(client.connection, msg.ClientID)
+		if err != nil {
+			log.Errorf("send msg failed: clientid")
+		}
 		// client.connection.Write(cursorPos)
 		err = writeAll(client.connection, cursorPos)
 		if err != nil {
-			log.Errorf("send failed: closeconn")
+			log.Errorf("send failed: cursorpos")
 		}
 		// client.connection.Write(deleteLen)
 		err = writeAll(client.connection, deleteLen)
 		if err != nil {
-			log.Errorf("send failed: closeconn")
+			log.Errorf("send failed: deleteLen")
 		}
 		// client.connection.Write(insertLen)
 		err = writeAll(client.connection, insertLen)
 		if err != nil {
-			log.Errorf("send failed: closeconn")
+			log.Errorf("send failed: insertLen")
 		}
 		// client.connection.Write(insertStr)
 		err = writeAll(client.connection, insertStr)
 		if err != nil {
-			log.Errorf("send failed: closeconn")
+			log.Errorf("send failed: insertStr")
 		}
 	}
 }

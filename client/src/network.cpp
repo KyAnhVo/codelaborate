@@ -107,6 +107,7 @@ void Network::recvMsg() {
 void Network::recvUpdateMsg(char msgStatus) {
     qDebug() << "Enter recvUpdateMsg()";
     UpdateMsg msg;
+    quint8 clientID;
 
     switch (static_cast<MsgStatus>(msgStatus)) {
         case MsgStatus::CLOSE_CONN:
@@ -119,6 +120,8 @@ void Network::recvUpdateMsg(char msgStatus) {
             throw std::runtime_error("Wrong function");
     }
 
+    clientID = this->recvUnsignedIntOfType<quint8>();
+    qDebug() << "Client ID: " << clientID;
     msg.cursorPos = this->recvUnsignedIntOfType<quint64>();
     qDebug() << "CursorPos: " << msg.cursorPos;
     msg.deleteLen = this->recvUnsignedIntOfType<quint64>();
@@ -131,7 +134,7 @@ void Network::recvUpdateMsg(char msgStatus) {
     if (msg.op == MsgOp::CLOSE_CONN)
         emit this->closeConnMsgArrived();
     else
-        emit this->updateMsgArrived(msg);
+        emit this->updateMsgArrived(msg, clientID);
     qDebug() << "Exit recvUpdateMsg()";
 }
 
@@ -146,7 +149,7 @@ void Network::recvEntryMsg(char msgStatus) {
                 qDebug() << "Entry successful for roomID "
                     << roomID
                     << " with clientID " << clientID;
-                emit this->entrySucceed(roomID);
+                emit this->entrySucceed(roomID, clientID);
                 break;
             }
         case MsgStatus::ENTRY_ERR:

@@ -101,6 +101,8 @@ void MainWindow::onJoinRoomSucceed(quint32 roomID, quint8 clientID) {
     this->joinRoomButton->setDisabled(true);
     this->createRoomButton->setDisabled(true);
     this->editor->setReadOnly(false);
+    
+    this->editor->clientID = clientID;
 }
 
 void MainWindow::onJoinRoomFailed() {

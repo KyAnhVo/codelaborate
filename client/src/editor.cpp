@@ -1,4 +1,14 @@
+// overall idea of the code:
+// Let pendingOps be a queue of un-Acked msgs coming from our side to the server.
+// Then any time we make a local change, we enqueue that op to pendingOps
+// Then when the msg comes back, if it is our message then we know that
+// the earliest un-Acked op is now acked, and we can dequeue it.
+// Else if it is others' op we apply T(other, ours) for each of our op.
+// Then we do the same: apply T(ours, other) on each of our op.
+
 #include "editor.h"
+#include "protocol.h"
+#include <qtypes.h>
 
 Editor::Editor() : QPlainTextEdit() {
     this->connect(
@@ -30,12 +40,17 @@ void Editor::onContentsChanged(int position, int deleteLen, int insertLen) {
         msg.insertLen = 0;
     }
 
+    this->pendingOps.push_back(msg);
+    
     emit this->edited(msg);
 }
 
-void Editor::applyRemoteEdit(UpdateMsg msg) {
-    qDebug() << "Remote change: " << msg.cursorPos
-        << msg.deleteLen << msg.insertLen << msg.insertStr;
+void Editor::applyRemoteEdit(UpdateMsg msg, quint8 clientID) {
+    if (clientID == this->clientID) {
+        this->pendingOps.pop_front();
+        return;
+    }
+
     applyingRemoteEdit = true;
     this->blockSignals(true);
     this->document()->setUndoRedoEnabled(false);
@@ -57,4 +72,62 @@ void Editor::applyRemoteEdit(UpdateMsg msg) {
     this->document()->setUndoRedoEnabled(true);
     this->blockSignals(false);
     applyingRemoteEdit = false;
+}
+
+UpdateMsg Editor::transform(const UpdateMsg& target, const UpdateMsg& other) {
+    UpdateMsg ret;
+    ret.op = target.op;
+    ret.insertLen = target.insertLen;
+    ret.insertStr = target.insertStr;
+
+    // first need to transform insertLen to insertLen in UTF-8 chars
+    // for OT purpose
+    quint64 targetInsertLenUtf8 = QString::fromUtf8(target.insertStr).length(),
+            otherInsertLenUtf8  = QString::fromUtf8(other.insertStr).length();
+
+    // then any cursorpos change for unintersected is based on these values
+    quint64 targetAlterLen = targetInsertLenUtf8 - target.deleteLen,
+            otherAlterLen = otherInsertLenUtf8 - other.deleteLen;
+    
+    // other op is earlier than target op in the document
+    if (other.cursorPos < target.cursorPos) {
+        // non-intersected previous op, intuitively we
+        // push the cursor position by the amount of
+        // alter the previous one was pushed up
+        if (other.cursorPos + other.deleteLen < target.cursorPos) {
+            ret.deleteLen = target.deleteLen;
+            ret.cursorPos = target.cursorPos + otherAlterLen;
+        }
+
+        // intersected op: there exists 2 cases: either
+        // inside case: [other start][target start][target end][other end], or
+        // interweiving case: [other start][target start][other end][target end]
+        else {
+        }
+    }
+
+    // target op is earlier than other op in the document
+    else if (target.cursorPos < other.cursorPos) {
+        // non-intersected latter op, essentially the same
+        if (target.cursorPos + target.deleteLen < other.cursorPos) {
+            ret.deleteLen = target.deleteLen;
+            ret.cursorPos = target.cursorPos;
+        }
+
+        // intersected op, there exists 2 cases: either
+        // inside case: [target start][other start][other end][target end], or
+        // interweiving case: [target start][other start][target end][other end]
+        else {
+
+        }
+    }
+
+    // target op at the same location as other op
+    else {
+        // If both are inserts, for a consistent cursor position,
+        // we identify the clientID and whichever client has the lower clientID
+        // we place it at the front.
+    }
+
+    return ret;
 }

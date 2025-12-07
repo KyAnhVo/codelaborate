@@ -18,7 +18,8 @@ public slots:
     void recvMsg();
 
 signals:
-    void updateMsgArrived(UpdateMsg);
+    void updateMsgArrived(UpdateMsg msg, quint8 clientID);
+    void updateMsgAcked();
     void closeConnMsgArrived();
     void entrySucceed(quint32 roomID, quint8 clientID);
     void entryFailed();
