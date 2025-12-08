@@ -53,7 +53,8 @@ void Editor::applyRemoteEdit(UpdateMsg rawMsg, quint8 clientID) {
         unackedMsg = this->transform(unackedMsg, rawMsg, this->clientID, clientID);
     }
 
-    qDebug() << "message tranformation: " << rawMsg.cursorPos << rawMsg.deleteLen << rawMsg.insertLen
+    qDebug() << "message tranformation:\n\t" << rawMsg.cursorPos << rawMsg.deleteLen << rawMsg.insertLen
+        << "\n\tqueue length: " << this->pendingOps.size()
         << "\n\tto" << msg.cursorPos << msg.deleteLen << msg.insertLen;
 
     applyingRemoteEdit = true;

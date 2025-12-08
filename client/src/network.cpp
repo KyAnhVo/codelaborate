@@ -80,7 +80,6 @@ void Network::sendEntryMsg(EntryMsg msg) {
 }
 
 void Network::recvMsg() {
-    qDebug() << "Enter recvMsg()";
     UpdateMsg msg;
     char buf;
 
@@ -100,8 +99,6 @@ void Network::recvMsg() {
                 emit this->bogusSignal();
         }
     }
-
-    qDebug() << "Exit recvMsg()";
 }
 
 void Network::recvUpdateMsg(char msgStatus) {
