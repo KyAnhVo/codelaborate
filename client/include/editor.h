@@ -22,7 +22,7 @@ signals:
 private:
     bool applyingRemoteEdit = false;
     std::deque<UpdateMsg> pendingOps;
-    UpdateMsg transform(const UpdateMsg& targetOp, const UpdateMsg& otherOp);
+    UpdateMsg transform(const UpdateMsg& targetOp, const UpdateMsg& otherOp, quint8 targetClientID, quint8 otherClientID);
 };
 
 #endif

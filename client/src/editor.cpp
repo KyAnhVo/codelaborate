@@ -29,7 +29,6 @@ void Editor::onContentsChanged(int position, int deleteLen, int insertLen) {
 
     if (insertLen > 0) {
         // get test from [position, position + insertLen)
-
         // Get raw text from document (preserves newlines)
         QString fullText = this->document()->toPlainText();
         QString text = fullText.mid(position, insertLen);
@@ -45,10 +44,16 @@ void Editor::onContentsChanged(int position, int deleteLen, int insertLen) {
     emit this->edited(msg);
 }
 
-void Editor::applyRemoteEdit(UpdateMsg msg, quint8 clientID) {
+void Editor::applyRemoteEdit(UpdateMsg rawMsg, quint8 clientID) {
     if (clientID == this->clientID) {
         this->pendingOps.pop_front();
         return;
+    }
+    
+    UpdateMsg msg = rawMsg;
+    for (UpdateMsg& unackedMsg : this->pendingOps) {
+        msg = this->transform(msg, unackedMsg, this->clientID, clientID);
+        unackedMsg = this->transform(unackedMsg, msg, clientID, this->clientID);
     }
 
     applyingRemoteEdit = true;
@@ -74,7 +79,7 @@ void Editor::applyRemoteEdit(UpdateMsg msg, quint8 clientID) {
     applyingRemoteEdit = false;
 }
 
-UpdateMsg Editor::transform(const UpdateMsg& target, const UpdateMsg& other) {
+UpdateMsg Editor::transform(const UpdateMsg& target, const UpdateMsg& other, quint8 targetClientID, quint8 otherClientID) {
     UpdateMsg ret;
     ret.op = target.op;
     ret.insertLen = target.insertLen;
@@ -103,6 +108,7 @@ UpdateMsg Editor::transform(const UpdateMsg& target, const UpdateMsg& other) {
         // inside case: [other start][target start][target end][other end], or
         // interweiving case: [other start][target start][other end][target end]
         else {
+            // TODO: implement this
         }
     }
 
@@ -118,7 +124,7 @@ UpdateMsg Editor::transform(const UpdateMsg& target, const UpdateMsg& other) {
         // inside case: [target start][other start][other end][target end], or
         // interweiving case: [target start][other start][target end][other end]
         else {
-
+            // TODO: implement this
         }
     }
 
@@ -127,6 +133,15 @@ UpdateMsg Editor::transform(const UpdateMsg& target, const UpdateMsg& other) {
         // If both are inserts, for a consistent cursor position,
         // we identify the clientID and whichever client has the lower clientID
         // we place it at the front.
+        if (other.deleteLen == 0 && target.deleteLen == 0) {
+            ret.deleteLen = 0;
+            if (targetClientID < otherClientID) {
+                ret.cursorPos = target.cursorPos;
+            }
+            else {
+                ret.cursorPos = target.cursorPos + otherAlterLen;
+            }
+        }
     }
 
     return ret;
