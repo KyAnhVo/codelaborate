@@ -52,8 +52,8 @@ void Editor::applyRemoteEdit(UpdateMsg rawMsg, quint8 clientID) {
     
     UpdateMsg msg = rawMsg;
     for (UpdateMsg& unackedMsg : this->pendingOps) {
-        msg = this->transform(msg, unackedMsg, this->clientID, clientID);
-        unackedMsg = this->transform(unackedMsg, msg, clientID, this->clientID);
+        msg = this->transform(msg, unackedMsg, clientID, this->clientID);
+        unackedMsg = this->transform(unackedMsg, rawMsg, this->clientID, clientID);
     }
 
     applyingRemoteEdit = true;
