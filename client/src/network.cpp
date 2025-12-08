@@ -105,7 +105,6 @@ void Network::recvMsg() {
 }
 
 void Network::recvUpdateMsg(char msgStatus) {
-    qDebug() << "Enter recvUpdateMsg()";
     UpdateMsg msg;
     quint8 clientID;
 
@@ -121,34 +120,22 @@ void Network::recvUpdateMsg(char msgStatus) {
     }
 
     clientID = this->recvUnsignedIntOfType<quint8>();
-    qDebug() << "Client ID: " << clientID;
     msg.cursorPos = this->recvUnsignedIntOfType<quint64>();
-    qDebug() << "CursorPos: " << msg.cursorPos;
     msg.deleteLen = this->recvUnsignedIntOfType<quint64>();
-    qDebug() << "deleteLen: " << msg.deleteLen;
     msg.insertLen = this->recvUnsignedIntOfType<quint64>();
-    qDebug() << "insertLen: " << msg.insertLen;
     msg.insertStr = this->readStr(msg.insertLen);
-    qDebug() << "insertStr: " << QString::fromUtf8(msg.insertStr);
 
     if (msg.op == MsgOp::CLOSE_CONN)
         emit this->closeConnMsgArrived();
     else
         emit this->updateMsgArrived(msg, clientID);
-    qDebug() << "Exit recvUpdateMsg()";
 }
 
 void Network::recvEntryMsg(char msgStatus) {
-    qDebug() << "Enter recvEntryMsg()";
     switch (static_cast<MsgStatus>(msgStatus)) {
         case MsgStatus::ENTRY_OK: {
-                qDebug() << "Entry successful";
                 quint32 roomID = this->recvUnsignedIntOfType<quint32>();
-
                 quint8 clientID = this->recvUnsignedIntOfType<quint8>();
-                qDebug() << "Entry successful for roomID "
-                    << roomID
-                    << " with clientID " << clientID;
                 emit this->entrySucceed(roomID, clientID);
                 break;
             }
@@ -159,7 +146,6 @@ void Network::recvEntryMsg(char msgStatus) {
         default: // never happens
             throw std::runtime_error("Wrong function");
     }
-    qDebug() << "Exit recvEntryMsg()";
 }
 
 template <typename t>

@@ -18,10 +18,7 @@ Editor::Editor() : QPlainTextEdit() {
 
 void Editor::onContentsChanged(int position, int deleteLen, int insertLen) {
     if (applyingRemoteEdit) return;
-
-    qDebug() << "Editor change:" << position << deleteLen << insertLen;
     if (deleteLen == 0 && insertLen == 0) return;
-
     UpdateMsg msg;
     msg.op = MsgOp::UPDATE;
     msg.cursorPos = position;
@@ -55,6 +52,9 @@ void Editor::applyRemoteEdit(UpdateMsg rawMsg, quint8 clientID) {
         msg = this->transform(msg, unackedMsg, clientID, this->clientID);
         unackedMsg = this->transform(unackedMsg, rawMsg, this->clientID, clientID);
     }
+
+    qDebug() << "message tranformation: " << rawMsg.cursorPos << rawMsg.deleteLen << rawMsg.insertLen
+        << "\n\tto" << msg.cursorPos << msg.deleteLen << msg.insertLen;
 
     applyingRemoteEdit = true;
     this->blockSignals(true);
