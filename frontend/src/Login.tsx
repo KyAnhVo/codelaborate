@@ -1,4 +1,38 @@
-import { useState } from "react"  
+import { useState } from "react"
+import "./Login.css"
+import "./main.css"
+
+function Login({ setLoggedIn, setSessionID } : {
+    setLoggedIn:  React.Dispatch<React.SetStateAction<boolean>>,
+    setSessionID: React.Dispatch<React.SetStateAction<number>>
+}) {
+  const [usrname, setUsrname] = useState("");
+  const [password, setPassword] = useState("");
+
+  return (
+    <>
+      <div className="mainDiv" id="loginDiv">
+        <label htmlFor="usernameInput">
+          USERNAME:
+          <input name="usernameInput"
+            value={usrname}
+            onChange={e => setUsrname(e.target.value)}
+          />
+        </label>
+        <label htmlFor="passwordInput">
+          PASSWORD:
+          <input name="passwordInput"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+          />
+        </label>
+        <button onClick={()=>loginAttempt(usrname, password, { setLoggedIn, setSessionID })}>
+          Login
+        </button>
+      </div>
+    </>
+  )
+} 
 
 async function verifyLogin(usrname: string, password: string): Promise<number> {
   if (usrname === "usrname" && password === "password") {
@@ -25,33 +59,5 @@ async function loginAttempt(
   }
 
 }
-
-function Login({ setLoggedIn, setSessionID } : {
-    setLoggedIn:  React.Dispatch<React.SetStateAction<boolean>>,
-    setSessionID: React.Dispatch<React.SetStateAction<number>>
-}) {
-  const [usrname, setUsrname] = useState("");
-  const [password, setPassword] = useState("");
-
-  return (
-    <>
-      <label htmlFor="usernameInput">
-        USERNAME:
-        <input name="usernameInput"
-          value={usrname}
-          onChange={e => setUsrname(e.target.value)}
-        />
-      </label>
-      <label htmlFor="passwordInput">
-        PASSWORD:
-        <input name="passwordInput"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-        />
-      </label>
-      <button onClick={()=>loginAttempt(usrname, password, { setLoggedIn, setSessionID })}/>
-    </>
-  )
-} 
 
 export default Login;
