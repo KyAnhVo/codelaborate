@@ -1,23 +1,34 @@
 import React, { useState } from 'react'
-import Login from './Login.tsx'
-import Dashboard from './Dashboard.tsx';
+
+import Login      from './Login.tsx'
+import Dashboard  from './Dashboard.tsx'
+import CodeRoom   from './CodeRoom.tsx'
 
 function App() {
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [sessionID, setSessionID] = useState(0);
-  const [codeRoomID, setCodeRoomID] = useState(0);
+  const [loggedIn, setLoggedIn] = useState<boolean>(false);
+  const [sessionID, setSessionID] = useState<string>("");
+  const [codeRoomID, setCodeRoomID] = useState<string>("");
 
   if (!loggedIn) {
+
     return (
       <>
-        <button onClick={()=>reset(setLoggedIn, setSessionID, setCodeRoomID)}>Reset</button>
+        <a href="#" onClick={(e)=>{
+          e.preventDefault();
+          reset(setLoggedIn, setSessionID, setCodeRoomID);
+        }}>Reset</a>
         <Login setLoggedIn={setLoggedIn} setSessionID={ setSessionID } />
       </>
     )
-  } else {
+
+  } else if (codeRoomID.length === 0) {
+
     return (
       <>
-        <button onClick={()=>reset(setLoggedIn, setSessionID, setCodeRoomID)}>Reset</button>
+        <a href="#" onClick={(e)=>{
+          e.preventDefault();
+          reset(setLoggedIn, setSessionID, setCodeRoomID);
+        }}>Reset</a>
         <Dashboard 
           sessionID={sessionID}
           codeRoomID={codeRoomID}
@@ -27,17 +38,34 @@ function App() {
         />
       </>
     )
+
+  } else {
+    
+    return (
+      <>
+        <a href="#" onClick={(e)=>{
+          e.preventDefault();
+          reset(setLoggedIn, setSessionID, setCodeRoomID);
+        }}>Reset</a>
+        <CodeRoom
+          sessionID={sessionID}
+          codeRoomID={codeRoomID}
+          setCodeRoomID={setCodeRoomID}
+        />
+      </>
+    )
+
   }
 }
 
 function reset(
   setLoggedIn: React.Dispatch<React.SetStateAction<boolean>>,
-  setSessionID: React.Dispatch<React.SetStateAction<number>>,
-  setCodeRoomID: React.Dispatch<React.SetStateAction<number>>,
+  setSessionID: React.Dispatch<React.SetStateAction<string>>,
+  setCodeRoomID: React.Dispatch<React.SetStateAction<string>>,
 ) {
   setLoggedIn(false);
-  setSessionID(0);
-  setCodeRoomID(0);
+  setSessionID("");
+  setCodeRoomID("");
 }
 
 export default App

@@ -2,10 +2,12 @@ import { useState } from "react"
 import "./Login.css"
 import "./main.css"
 
-function Login({ setLoggedIn, setSessionID } : {
+function Login(
+  {setLoggedIn, setSessionID} : {
     setLoggedIn:  React.Dispatch<React.SetStateAction<boolean>>,
-    setSessionID: React.Dispatch<React.SetStateAction<number>>
-}) {
+    setSessionID: React.Dispatch<React.SetStateAction<string>>,
+  },
+) {
   const [usrname, setUsrname] = useState("");
   const [password, setPassword] = useState("");
 
@@ -34,11 +36,11 @@ function Login({ setLoggedIn, setSessionID } : {
   )
 } 
 
-async function verifyLogin(usrname: string, password: string): Promise<number> {
+async function verifyLogin(usrname: string, password: string): Promise<string> {
   if (usrname === "usrname" && password === "password") {
-    return 1;
+    return "000001";
   }
-  return -1;
+  return "";
 }
 
 async function loginAttempt(
@@ -46,12 +48,12 @@ async function loginAttempt(
   password: string,
   { setLoggedIn, setSessionID } : {
     setLoggedIn:  React.Dispatch<React.SetStateAction<boolean>>,
-    setSessionID: React.Dispatch<React.SetStateAction<number>>
+    setSessionID: React.Dispatch<React.SetStateAction<string>>
   }
 ): Promise<void> {
 
-  let sessionID: number = await verifyLogin(usrname, password);
-  if (sessionID == -1) {
+  let sessionID: string = await verifyLogin(usrname, password);
+  if (sessionID.length === 0) {
     return
   } else {
     setLoggedIn(true);
