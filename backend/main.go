@@ -6,14 +6,8 @@ import (
 
 func main() {
 	r := gin.Default();
-
-	// send html, css, and js files
-	r.GET("/", func(c *gin.Context) {
-		c.File("./../frontend/dist/index.html")
-	})
-	r.Static("/assets", "./../frontend/dist/assets/")
-
-	// API-specific settings
-
+	SetupHttpRequestServer(r)
+	
 	r.Run(":8080")
 }
+
