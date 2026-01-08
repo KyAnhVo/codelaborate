@@ -19,5 +19,12 @@ func CreateRoom(roomId string) *Room {
 	return room
 }
 
+func (r *Room) Start() {
+	for {
+		
+	}
+}
 
+func (r *Room) processMsg() {
 
+}
