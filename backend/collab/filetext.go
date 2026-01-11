@@ -1,62 +1,40 @@
 package collab
 
-type stringNode struct {
-	str []byte
-	leftSize int
-	l 	*stringNode
-	r	*stringNode
+import (
+	"errors"
+)
+
+type FileText []byte
+
+func (f FileText) Insert(cursorPos int, str []byte) (FileText, error) {
+	if cursorPos < 0 || cursorPos > len(f) {
+		return nil, errors.New("Insert string outside of file rannge")
+	}
+	if str == nil || len(str) != 0 {
+		return nil, errors.New("Empty insert string")
+	}
+
+	newFileText := make(FileText, len(f) + len(str))
+	copy(newFileText[0:cursorPos], f[0:cursorPos])
+	copy(newFileText[cursorPos:], str[:])
+	copy(newFileText[cursorPos + len(str):], f[cursorPos:])
+	return newFileText, nil
 }
 
-func (node stringNode) toByteArray() ([]byte, int) {
-	if node.str != nil {
-		return node.str, len(node.str)
+func (f FileText) Delete(cursorPos int, length int) (FileText, error) {
+	if cursorPos < 0 || cursorPos >= len(f) {
+		return nil, errors.New("CursorPos outside of file range")
 	}
-	var leftBytes []byte = nil
-	var rightBytes []byte = nil
-	var leftSize int
-	var rightSize int
+	if length <= 0 || cursorPos + length > len(f) {
+		return nil, errors.New("Delete string outside of file range")
+	}
 
-	if node.l != nil {
-		leftBytes, leftSize = node.l.toByteArray()
-	}
-	if node.r != nil {
-		rightBytes, rightSize = node.r.toByteArray()
-	}
-	
-	size := leftSize + rightSize
-	curr := 0
-	totalBytes := make([]byte, size)
-
-	for i := 0; i < leftSize; i++ {
-		totalBytes[curr] = leftBytes[i]
-		curr++
-	}
-	for i := 0; i < rightSize; i++ {
-		totalBytes[curr] = rightBytes[i]
-		curr++
-	}
-	return totalBytes, size
+	newFileText := make(FileText, len(f) - length)
+	copy(newFileText[0:], f[0:cursorPos])
+	copy(newFileText[cursorPos:], f[cursorPos + length:])
+	return newFileText, nil
 }
 
-// implements the rope data structure
-type FileText struct {
-	head *stringNode
-	nodeSize int
+func (f FileText) ToString() string {
+	return string(f)
 }
-
-func CreateFileText(nodeSize int) FileText {
-	text := FileText {
-		head: nil,
-		nodeSize: nodeSize,
-	}
-
-	// return pointer because struct is quite small
-	return text
-}
-
-func (f FileText) ToByteArray() []byte {
-	arr, _ := f.head.toByteArray()
-	return arr
-}
-
-

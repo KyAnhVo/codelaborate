@@ -9,6 +9,9 @@ type Room struct {
 
 	// this manages client, send update to clients, etc.
 	Clients []*Client
+
+	// the core text string
+	Text FileText
 }
 
 func CreateRoom(roomId string) *Room {
@@ -16,11 +19,13 @@ func CreateRoom(roomId string) *Room {
 	room.Id = roomId
 	room.MsgInChannel = make(chan *UpdateMsg, 128)
 	room.Clients = make([]*Client, 32)
+	room.Text = FileText{}
 	return room
 }
 
 func (r *Room) Start() {
 	for {
+		msg := <-r.MsgInChannel
 		
 	}
 }
