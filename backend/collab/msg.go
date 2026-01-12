@@ -2,7 +2,7 @@ package collab
 
 type JoinMsg struct {
 	// 6 digits, sending user's session ID (not user ID)
-	SessionID string `json:"SessionID"`
+	SessionID int `json:"SessionID"`
 
 	// either "join" or "create"
 	Op string `json:"Op"` 		
@@ -13,7 +13,7 @@ type JoinMsg struct {
 
 type UpdateMsg struct {
 	// 6 digits, sending user's session ID (not user ID)
-	SessionID string `json:"SessionID"`
+	SessionID int `json:"SessionID"`
 
 	// either "update" or "exit"
 	Op string `json:"Op"`
