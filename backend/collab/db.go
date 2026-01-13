@@ -23,7 +23,7 @@ func CreateDbConn(opTimeoutTime time.Duration) (*DbConn, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), pool.opTimeout * time.Second)
 	defer cancel()
 
-	pool.pool, err = pgxpool.New(ctx, os.Getenv("COLLABORATE_DB_URL"))
+	pool.pool, err = pgxpool.New(ctx, os.Getenv("CODELABORATE_DATABASE_URL"))
 	if err != nil {
 		return nil, err
 	}
