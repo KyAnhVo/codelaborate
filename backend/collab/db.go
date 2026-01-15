@@ -32,48 +32,27 @@ func CreateDbConn(opTimeoutTime time.Duration) (*DbConn, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	pool.pool.Exec(
 		context.Background(),
 		`CREATE TABLE IF NOT EXISTS Users (
 			userID 		char(6),
 			name		text,
 			email		text,
-
 			CONSTRAINT PRIMARY KEY userID,
 			CONSTRAINT UNIQUE NOT NULL name,
 			CONSTRAINT UNIQUE NOT NULL email
-		)`,
-	)
-
-	pool.pool.Exec(
-		context.Background(),
-		`CREATE TABLE IF NOT EXISTS SessionID (
+		);
+		CREATE TABLE IF NOT EXISTS SessionID (
 			userID char(6),
 			sessionID serial,
-
 			CONSTRAINT PRIMARY KEY userID,
 			CONSTRAINT UNIQUE serial
-		)`,
+		);
+		CREATE TABLE IF NOT EXISTS Ops (
+			sessionID	char(6),
+			message		bytea,
+		);`,
 	)
-
-	pool.pool.Exec(
-		context.Background(),
-		`CREATE TABLE IF NOT EXISTS Ops (
-			userID 		char(6),
-			version 	bigserial,
-			deleteLen 	integer,
-			insertLen	integer,
-			insertStr	text,
-
-			CONSTRAINT PRIMARY KEY (userID, version),
-			CONSTRAINT FOREIGN KEY (userID) REFERENCES Users(userID) ON DELETE CASCADE,
-			CONSTRAINT NOT NULL deleteLen,
-			CONSTRAINT NOT NULL insertLen
-		)`,
-	)
-
-
 
 	return pool, nil
 }
