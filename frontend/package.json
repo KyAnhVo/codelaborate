@@ -12,7 +12,10 @@
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "yjs": "^13.6.20",
+    "y-websocket": "^2.0.8",
+    "y-monaco": "^0.1.6"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

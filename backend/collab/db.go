@@ -65,8 +65,19 @@ func (pool *DbConn) CloseConn() error {
 	return nil
 }
 
-func (pool *DbConn) AddSession(userID string) {
+func (pool *DbConn) AddSession(userID string) error {
+	if pool.pool == nil {
+		return errors.New("Pool not initialize")
+	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), pool.opTimeout)
+	defer cancel()
+
+	_, err := pool.pool.Exec(ctx,
+		"INSERT INTO SessionID (userID) VALUES ($1) ON CONFLICT (userID) DO UPDATE SET sessionID = EXCLUDED.sessionID",
+		userID,
+	)
+	return err
 }
 
 func (pool *DbConn) InsertMsg(msg *UpdateMsg) error {
@@ -77,7 +88,26 @@ func (pool *DbConn) InsertMsg(msg *UpdateMsg) error {
 	ctx, cancel := context.WithTimeout(context.Background(), pool.opTimeout)
 	defer cancel()
 
+	_, err := pool.pool.Exec(ctx,
+		"INSERT INTO Ops (sessionID, message) VALUES ($1, $2)",
+		msg.SessionID,
+		msg.YjsBytes,
+	)
 
+	return err
+}
 
-	return nil
+func (pool *DbConn) CreateUser(userID, name, email string) error {
+	if pool.pool == nil {
+		return errors.New("Pool not initialize")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), pool.opTimeout)
+	defer cancel()
+
+	_, err := pool.pool.Exec(ctx,
+		"INSERT INTO Users (userID, name, email) VALUES ($1, $2, $3) ON CONFLICT (userID) DO NOTHING",
+		userID, name, email,
+	)
+	return err
 }

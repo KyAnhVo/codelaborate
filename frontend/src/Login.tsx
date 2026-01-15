@@ -37,10 +37,27 @@ function Login(
 } 
 
 async function verifyLogin(usrname: string, password: string): Promise<string> {
-  if (usrname === "usrname" && password === "password") {
-    return "000001";
+  try {
+    const response = await fetch('/api/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username: usrname,
+        password: password,
+      }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return data.sessionID;
+    }
+    return "";
+  } catch (error) {
+    console.error('Login error:', error);
+    return "";
   }
-  return "";
 }
 
 async function loginAttempt(

@@ -34,19 +34,52 @@ function Dashboard(
   )
 }
 
-function joinRoom(
+async function joinRoom(
   roomID: string,
   sessionID: string,
   setCodeRoomID: React.Dispatch<React.SetStateAction<string>>
-): void {
-  return
+): Promise<void> {
+  try {
+    const response = await fetch(`/api/rooms/${roomID}`);
+    if (response.ok) {
+      const data = await response.json();
+      if (data.exists) {
+        setCodeRoomID(roomID);
+      } else {
+        alert('Room not found');
+      }
+    } else {
+      alert('Room not found');
+    }
+  } catch (error) {
+    console.error('Join room error:', error);
+    alert('Failed to join room');
+  }
 }
 
-function createRoom(
+async function createRoom(
   sessionID: string,
   setCodeRoomID: React.Dispatch<React.SetStateAction<string>>
-): void {
-  setCodeRoomID('000001')
+): Promise<void> {
+  try {
+    const response = await fetch('/api/rooms', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ sessionID }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      setCodeRoomID(data.roomID);
+    } else {
+      alert('Failed to create room');
+    }
+  } catch (error) {
+    console.error('Create room error:', error);
+    alert('Failed to create room');
+  }
 }
 
 export default Dashboard;

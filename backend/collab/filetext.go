@@ -10,7 +10,7 @@ func (f FileText) Insert(cursorPos int, str []byte) (FileText, error) {
 	if cursorPos < 0 || cursorPos > len(f) {
 		return nil, errors.New("Insert string outside of file rannge")
 	}
-	if str == nil || len(str) != 0 {
+	if str == nil || len(str) == 0 {
 		return nil, errors.New("Empty insert string")
 	}
 
